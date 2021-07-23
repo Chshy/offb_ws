@@ -5,8 +5,8 @@
             "includePath": [
                 "${workspaceFolder}/**",
                 "/usr/include",
-                "/opt/ros/melodic/include"
-                //"/home/ubuntu/catkin_ws/src/mavros/mavros/include"
+                "/opt/ros/melodic/include",
+                "/home/ubuntu/catkin_ws/devel/include"
             ],
             "defines": [],
             "compilerPath": "/usr/bin/gcc",
