@@ -1,0 +1,3 @@
+Symlinking /home/ubuntu/offb_ws/devel/lib/pkgconfig/drone_offb_ctrl.pc
+Symlinking /home/ubuntu/offb_ws/devel/share/drone_offb_ctrl/cmake/drone_offb_ctrlConfig.cmake
+Symlinking /home/ubuntu/offb_ws/devel/share/drone_offb_ctrl/cmake/drone_offb_ctrlConfig-version.cmake

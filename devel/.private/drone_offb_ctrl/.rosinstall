@@ -1,0 +1,2 @@
+- setup-file:
+    local-name: /home/ubuntu/offb_ws/devel/.private/drone_offb_ctrl/setup.sh

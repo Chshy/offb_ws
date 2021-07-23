@@ -1,0 +1,8 @@
+prefix=/home/ubuntu/offb_ws/install
+
+Name: drone_offb_ctrl
+Description: Description of drone_offb_ctrl
+Version: 0.0.0
+Cflags: -I${prefix}/include
+Libs: -L${prefix}/lib 
+Requires: 

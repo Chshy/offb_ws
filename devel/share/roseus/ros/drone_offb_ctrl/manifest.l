@@ -1,0 +1,1 @@
+/home/ubuntu/offb_ws/devel/.private/drone_offb_ctrl/share/roseus/ros/drone_offb_ctrl/manifest.l

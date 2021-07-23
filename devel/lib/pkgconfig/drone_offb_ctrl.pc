@@ -1,0 +1,1 @@
+/home/ubuntu/offb_ws/devel/.private/drone_offb_ctrl/lib/pkgconfig/drone_offb_ctrl.pc
