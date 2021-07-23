@@ -14,100 +14,14 @@
 #include <cmath>
 #include <math.h>
 #include <ros/duration.h>
+
+#include "frame_trans.hpp"
+#include "basic_info_callback.hpp"
+#include "destination_set.hpp"
+
+
 using namespace std;
 
-//Set global variables
-mavros_msgs::State current_state;
-geometry_msgs::PoseStamped current_pose_offset;
-geometry_msgs::PoseStamped current_pose;
-geometry_msgs::PoseStamped pose;
-std_msgs::Float64 current_heading;
-float GYM_OFFSET;
-
-
-geometry_msgs::PoseStamped POSE_OFFSET;
-
-
-
-//获取状态(mavros/state 的回调函数)
-//get armed state
-//DISARMED-锁定 ARMED-解锁
-void state_cb(const mavros_msgs::State::ConstPtr &msg)
-{
-    current_state = *msg;
-    bool connected = current_state.connected;
-    bool armed = current_state.armed;
-}
-
-//获取当前飞机位置(/mavros/global_position/pose 的回调函数)
-//get current position of drone
-void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
-{
-    current_pose = *msg;
-    //ROS_INFO("x: %f y: %f z: %f", current_pose.pose.position.x, current_pose.pose.position.y, current_pose.pose.position.z);
-}
-
-geometry_msgs::PoseStamped pose_offset(geometry_msgs::PoseStamped pose)
-{
-    pose.pose.position.x -= POSE_OFFSET.pose.position.x;
-    pose.pose.position.y -= POSE_OFFSET.pose.position.y;
-    pose.pose.position.z -= POSE_OFFSET.pose.position.z;
-    return pose;
-}
-
-geometry_msgs::PoseStamped pose_deoffset(geometry_msgs::PoseStamped pose)
-{
-    pose.pose.position.x += POSE_OFFSET.pose.position.x;
-    pose.pose.position.y += POSE_OFFSET.pose.position.y;
-    pose.pose.position.z += POSE_OFFSET.pose.position.z;
-    return pose;
-}
-
-//获取罗盘方向(/mavros/global_position/compass_hdg 的回调函数)
-//get compass heading
-void heading_cb(const std_msgs::Float64::ConstPtr &msg)
-{
-    current_heading = *msg;
-    ROS_INFO("current heading: %f", current_heading.data);
-}
-
-//设置飞机的朝向
-//set orientation of the drone (drone should always be level)
-void setHeading(float heading)
-{
-    heading = -heading + 90 - GYM_OFFSET;
-    float yaw = heading * (M_PI / 180);
-    float pitch = 0;
-    float roll = 0;
-    float cy = cos(yaw * 0.5);
-    float sy = sin(yaw * 0.5);
-    float cr = cos(roll * 0.5);
-    float sr = sin(roll * 0.5);
-    float cp = cos(pitch * 0.5);
-    float sp = sin(pitch * 0.5);
-    float qw = cy * cr * cp + sy * sr * sp;
-    float qx = cy * sr * cp - sy * cr * sp;
-    float qy = cy * cr * sp + sy * sr * cp;
-    float qz = sy * cr * cp - cy * sr * sp;
-    pose.pose.orientation.w = qw;
-    pose.pose.orientation.x = qx;
-    pose.pose.orientation.y = qy;
-    pose.pose.orientation.z = qz;
-}
-
-// set position to fly to in the gym frame
-void setDestination(float x, float y, float z)
-{
-    float deg2rad = (M_PI / 180);
-    float X = x * cos(-GYM_OFFSET * deg2rad) - y * sin(-GYM_OFFSET * deg2rad);
-    float Y = x * sin(-GYM_OFFSET * deg2rad) + y * cos(-GYM_OFFSET * deg2rad);
-    float Z = z;
-    pose.pose.position.x = X;
-    pose.pose.position.y = Y;
-    pose.pose.position.z = Z;
-    ROS_INFO("Destination set to x: %f y: %f z %f", X, Y, Z);
-    pose = pose_deoffset(pose);
-}
 
 int main(int argc, char **argv)
 {
@@ -135,11 +49,8 @@ int main(int argc, char **argv)
     }
 
     //当不为GUIDED模式时一直等待
-    //while (current_state.mode != "GUIDED")
-    while (current_state.guided != true)
+    while (fcu_state.guided != true)
     {
-        //ROS_INFO(current_state.mode);
-
         ros::spinOnce();             //处理消息订阅
         ros::Duration(0.01).sleep(); //Sleep 0.01s
     }
@@ -150,6 +61,7 @@ int main(int argc, char **argv)
     /*
     //MAV:33
     //set the orientation of the gym 
+    //检测飞行场地相对于ENU的Yaw角度
     GYM_OFFSET = 0;
     for (int i = 1; i <= 30; ++i)
     {
@@ -165,7 +77,7 @@ int main(int argc, char **argv)
    
     //等待飞控连接
     // wait for FCU connection
-    while (ros::ok() && !current_state.connected)
+    while (ros::ok() && !fcu_state.connected)
     {
         ros::spinOnce(); //处理消息订阅
         rate.sleep();    //睡眠，保证循环频率为20Hz
@@ -200,8 +112,11 @@ int main(int argc, char **argv)
     if (takeoff_cl.call(srv_takeoff))
     {
         ROS_INFO("takeoff sent %d", srv_takeoff.response.success);
-        POSE_OFFSET = current_pose;
-        ROS_INFO("POSE_OFFSET E=%lf N=%lf U=%lf", POSE_OFFSET.pose.position.x,POSE_OFFSET.pose.position.y,POSE_OFFSET.pose.position.z);
+
+        offset_calib( &fcu_heading , &fcu_pose );
+
+        // POSE_OFFSET = current_pose;
+        // ROS_INFO("POSE_OFFSET E=%lf N=%lf U=%lf", POSE_OFFSET.pose.position.x,POSE_OFFSET.pose.position.y,POSE_OFFSET.pose.position.z);
     }
     else
     {
@@ -212,18 +127,18 @@ int main(int argc, char **argv)
 
     //前进(Publish)
     //move foreward
-    setHeading(0);
+    setYaw_gym(0);
     // setDestination(0, 2, 1.5);
-    setDestination(0, 0, 0.5);
+    setDestination_gym(0, 0, 0.5);
+
     float tollorance = .15;//35
     if (local_pos_pub)
     {
         for (int i = 10000; ros::ok() && i > 0; --i)
         {
-            local_pos_pub.publish(pose);
+            local_pos_pub.publish(destinatin_fcu);
 
 
-            current_pose_offset = pose_offset(current_pose);
             float deltaX = abs(pose.pose.position.x - current_pose_offset.pose.position.x);
             float deltaY = abs(pose.pose.position.y - current_pose_offset.pose.position.y);
             float deltaZ = abs(pose.pose.position.z - current_pose_offset.pose.position.z);
