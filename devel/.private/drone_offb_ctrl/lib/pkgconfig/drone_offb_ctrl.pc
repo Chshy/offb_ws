@@ -1,8 +1,0 @@
-prefix=/home/ubuntu/offb_ws/devel/.private/drone_offb_ctrl
-
-Name: drone_offb_ctrl
-Description: Description of drone_offb_ctrl
-Version: 0.0.0
-Cflags: -I/home/ubuntu/offb_ws/src/drone_offb_ctrl/include
-Libs: -L${prefix}/lib 
-Requires: 
