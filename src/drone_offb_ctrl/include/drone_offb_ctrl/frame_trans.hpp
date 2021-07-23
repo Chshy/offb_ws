@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>
@@ -38,8 +39,8 @@ void offset_reset()
 }
 
 //设定偏置值
-void offset_calib(const std_msgs::Float64ConstPtr &fcu_heading_addr,
-                  const geometry_msgs::PoseStamped::ConstPtr &fcu_pose_addr)
+void offset_calib(std_msgs::Float64 fcu_heading,
+                  geometry_msgs::PoseStamped fcu_pose)
 {
 
     for (int i = 1; i <= CALIB_TIME; ++i)
@@ -48,10 +49,10 @@ void offset_calib(const std_msgs::Float64ConstPtr &fcu_heading_addr,
         ros::spinOnce();            //处理消息订阅
         ros::Duration(0.1).sleep(); //Sleep 0.1s
 
-        YAW_OFFSET += fcu_heading_addr->data;
-        POSE_OFFSET.pose.position.x += fcu_pose_addr->pose.position.x;
-        POSE_OFFSET.pose.position.y += fcu_pose_addr->pose.position.y;
-        POSE_OFFSET.pose.position.z += fcu_pose_addr->pose.position.z;
+        YAW_OFFSET += fcu_heading.data;
+        POSE_OFFSET.pose.position.x += fcu_pose.pose.position.x;
+        POSE_OFFSET.pose.position.y += fcu_pose.pose.position.y;
+        POSE_OFFSET.pose.position.z += fcu_pose.pose.position.z;
 
         // ROS_INFO("current heading%d: %f", i, GYM_OFFSET / i);
     }
@@ -114,14 +115,41 @@ void frame_gym2fcu(float *x, float *y, float *z)
     return;
 }
 
+void frame_fcu2gym(double *x, double *y, double *z)
+{
+    *z -= POSE_OFFSET.pose.position.z;
+
+    double tx, ty;
+    tx = *x - POSE_OFFSET.pose.position.x;
+    ty = *y - POSE_OFFSET.pose.position.y;
+
+    *x = tx * YAW_OFFSET_COS + ty * YAW_OFFSET_SIN;
+    *y = ty * YAW_OFFSET_COS - tx * YAW_OFFSET_SIN;
+    return;
+}
+
+void frame_gym2fcu(double *x, double *y, double *z)
+{
+    *z += POSE_OFFSET.pose.position.z;
+
+    //sin(-x)=-sin(x)
+    //cos(-x)=cos(x)
+    double tx, ty;
+    tx = *x * YAW_OFFSET_COS - *y * YAW_OFFSET_SIN;
+    ty = *y * YAW_OFFSET_COS + *x * YAW_OFFSET_SIN;
+    *x = tx + POSE_OFFSET.pose.position.x;
+    *y = ty + POSE_OFFSET.pose.position.y;
+    return;
+}
+
 geometry_msgs::PoseStamped frame_fcu2gym(geometry_msgs::PoseStamped pose)
 {
-    frame_fcu2gym(pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+    frame_fcu2gym(&pose.pose.position.x, &pose.pose.position.y, &pose.pose.position.z);
     return pose;
 }
 
 geometry_msgs::PoseStamped frame_gym2fcu(geometry_msgs::PoseStamped pose)
 {
-    frame_gym2fcu(pose.pose.position.x, pose.pose.position.y, pose.pose.position.z);
+    frame_gym2fcu(&pose.pose.position.x, &pose.pose.position.y, &pose.pose.position.z);
     return pose;
 }

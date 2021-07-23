@@ -1,3 +1,4 @@
+#pragma once
 #include <iostream>
 #include <ros/ros.h>
 #include <geometry_msgs/PoseStamped.h>

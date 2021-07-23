@@ -1,3 +1,4 @@
+#pragma once
 /**********************************************
 
     ros::init(argc, argv, "offb_node");
@@ -64,6 +65,6 @@ void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 void heading_cb(const std_msgs::Float64::ConstPtr &msg)
 {
     fcu_heading = *msg;
-    gym_heading = fcu_heading
+    gym_heading = fcu_heading;
     // ROS_INFO("current heading: %f", fcu_heading.data);
 }

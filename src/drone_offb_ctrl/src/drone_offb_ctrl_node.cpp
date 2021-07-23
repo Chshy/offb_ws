@@ -15,9 +15,9 @@
 #include <math.h>
 #include <ros/duration.h>
 
-#include "frame_trans.hpp"
-#include "basic_info_callback.hpp"
-#include "destination_set.hpp"
+#include "drone_offb_ctrl/frame_trans.hpp"
+#include "drone_offb_ctrl/basic_info_callback.hpp"
+#include "drone_offb_ctrl/destination_set.hpp"
 
 
 using namespace std;
@@ -113,7 +113,7 @@ int main(int argc, char **argv)
     {
         ROS_INFO("takeoff sent %d", srv_takeoff.response.success);
 
-        offset_calib( &fcu_heading , &fcu_pose );
+        offset_calib( fcu_heading , fcu_pose );
 
         // POSE_OFFSET = current_pose;
         // ROS_INFO("POSE_OFFSET E=%lf N=%lf U=%lf", POSE_OFFSET.pose.position.x,POSE_OFFSET.pose.position.y,POSE_OFFSET.pose.position.z);
@@ -139,10 +139,10 @@ int main(int argc, char **argv)
             local_pos_pub.publish(destinatin_fcu);
 
 
-            float deltaX = abs(pose.pose.position.x - current_pose_offset.pose.position.x);
-            float deltaY = abs(pose.pose.position.y - current_pose_offset.pose.position.y);
-            float deltaZ = abs(pose.pose.position.z - current_pose_offset.pose.position.z);
-	        ROS_INFO("Current Pos: x=%5.3lf y=%5.3lf z=%5.3lf", current_pose_offset.pose.position.x,current_pose_offset.pose.position.y,current_pose_offset.pose.position.z);
+            float deltaX = abs(destinatin_gym.pose.position.x - gym_pose.pose.position.x);
+            float deltaY = abs(destinatin_gym.pose.position.y - gym_pose.pose.position.y);
+            float deltaZ = abs(destinatin_gym.pose.position.z - gym_pose.pose.position.z);
+	        ROS_INFO("Current Pos: x=%5.3lf y=%5.3lf z=%5.3lf", gym_pose.pose.position.x,gym_pose.pose.position.y,gym_pose.pose.position.z);
 
             float dMag = sqrt(pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2));
 
