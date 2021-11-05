@@ -1,0 +1,1 @@
+/home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/pkgconfig/drone_gpio.pc

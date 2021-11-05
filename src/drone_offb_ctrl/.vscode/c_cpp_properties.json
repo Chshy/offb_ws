@@ -1,0 +1,24 @@
+{
+  "configurations": [
+    {
+      "browse": {
+        "databaseFilename": "",
+        "limitSymbolsToIncludedHeaders": true
+      },
+      "includePath": [
+        "/home/ubuntu/catkin_ws/devel/include/**",
+        "/opt/ros/melodic/include/**",
+        "/home/ubuntu/offb_ws/src/drone_offb_ctrl/include/**",
+        "/home/ubuntu/offb_ws/src/drone_tf/include/**",
+        "/home/ubuntu/catkin_ws/src/mavros/libmavconn/include/**",
+        "/home/ubuntu/catkin_ws/src/mavros/mavros/include/**",
+        "/home/ubuntu/catkin_ws/src/mavros/mavros_msgs/include/**",
+        "/home/ubuntu/catkin_ws/src/realsense-ros/realsense2_camera/include/**",
+        "/home/ubuntu/catkin_ws/src/mavros/test_mavros/include/**",
+        "/usr/include/**"
+      ],
+      "name": "ROS"
+    }
+  ],
+  "version": 4
+}
