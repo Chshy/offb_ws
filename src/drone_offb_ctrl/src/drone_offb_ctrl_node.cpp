@@ -44,7 +44,9 @@ tf2_ros::Buffer tfBuffer;
 ros::Publisher set_gp_origin_pub;
 ros::Publisher set_raw_pub;
 ros::Publisher local_pos_pub;
+
 //get state
+//获取飞控状态(回调函数)
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
 {
   current_state = *msg;
@@ -53,6 +55,7 @@ void state_cb(const mavros_msgs::State::ConstPtr &msg)
 }
 
 //get current position of drone
+//获取飞控回传的位置
 void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
   current_pose = *msg;
