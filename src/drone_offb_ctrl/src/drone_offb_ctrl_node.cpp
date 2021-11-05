@@ -204,7 +204,7 @@ int set_speed_body(double x, double y, double z, double yaw_rate = 0) //flu mete
     raw_target.velocity.z = z;
     raw_target.yaw_rate = yaw_rate;
     set_raw_pub.publish(raw_target);
-    f return 0;
+    return 0;
 }
 
 int set_speed_enu(double x, double y, double z, double yaw_rate) //flu meter/s rad/s, must set continously, or the vehicle stops after a few seconds(failsafe feature). yaw_rate = 0 when not used.
@@ -332,64 +332,25 @@ int main(int argc, char **argv)
         ros::Duration(0.01).sleep();
     }
 
-    for (int i = 200; i > 0; i--)
-    {
-        set_speed_body(0.2, 0, 0); //flu
-        ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
-        // set_angular_rate(30*(M_PI/180));//FLU rad/s
-        ros::Duration(0.05).sleep();
-    }
+    const double vF[4] = {0.2, 0, -0.2, 0};
+    const double vL[4] = {0, 0.2, 0, -0.2};
 
-    //  set_pose_body(0,0,0,45*(M_PI/180));
-
-    //等2秒
-    for (int i = 0; i < 200; i++)
+    for (int mission_step = 0; mission_step < 4; mission_step++)
     {
-        set_speed_body(0, 0, 0);
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
-    for (int i = 200; i > 0; i--)
-    {
-        set_speed_body(0, 0.2, 0); //flu
-        ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
-        // set_angular_rate(30*(M_PI/180));//FLU rad/s
-        ros::Duration(0.05).sleep();
-    }
-    //等2秒
-    for (int i = 0; i < 200; i++)
-    {
-        set_speed_body(0, 0, 0);
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
-    for (int i = 200; i > 0; i--)
-    {
-        set_speed_body(-0.2, 0, 0); //flu
-        ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
-        // set_angular_rate(30*(M_PI/180));//FLU rad/s
-        ros::Duration(0.05).sleep();
-    }
-    //等2秒
-    for (int i = 0; i < 200; i++)
-    {
-        set_speed_body(0, 0, 0);
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
-    for (int i = 200; i > 0; i--)
-    {
-        set_speed_body(0, -0.2, 0); //flu
-        ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
-        // set_angular_rate(30*(M_PI/180));//FLU rad/s
-        ros::Duration(0.05).sleep();
-    }
-    //等2秒
-    for (int i = 0; i < 200; i++)
-    {
-        set_speed_body(0, 0, 0);
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
+        for (int i = 200; i > 0; i--)
+        {
+            ros::spinOnce();
+            set_speed_body(vF[mission_step], vL[mission_step], 0); //flu
+            ros::Duration(0.05).sleep();
+            ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
+        }
+        //等2秒
+        for (int i = 0; i < 200; i++)
+        {
+            ros::spinOnce();
+            set_speed_body(0, 0, 0);
+            ros::Duration(0.01).sleep();
+        }
     }
 
     // //  move foreward
