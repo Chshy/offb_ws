@@ -44,7 +44,9 @@ tf2_ros::Buffer tfBuffer;
 ros::Publisher set_gp_origin_pub;
 ros::Publisher set_raw_pub;
 ros::Publisher local_pos_pub;
+
 //get state
+//获取飞控状态(回调函数)
 void state_cb(const mavros_msgs::State::ConstPtr &msg)
 {
     current_state = *msg;
@@ -53,6 +55,7 @@ void state_cb(const mavros_msgs::State::ConstPtr &msg)
 }
 
 //get current position of drone
+//获取飞控回传的位置
 void pose_cb(const geometry_msgs::PoseStamped::ConstPtr &msg)
 {
     current_pose = *msg;
@@ -290,6 +293,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         ros::Duration(0.01).sleep();
     }
+
     // while (current_state.mode != "OFFBOARD") //wait for remote command
     // {
     //     ros::spinOnce();
@@ -313,10 +317,12 @@ int main(int argc, char **argv)
     //     ros::spinOnce();
     //     rate.sleep();
     // }
+
     ROS_INFO("connected_ok");
     //arm
     // arm_drone(nh);
     //等一秒
+
     // for (int i = 0; i < 100; i++)
     // {
     //     ros::spinOnce();
@@ -386,6 +392,7 @@ int main(int argc, char **argv)
 //             ros::Duration(0.01).sleep();
 //         }
 //     }
+
 
     // //  move foreward
     //   setHeading(45);//in reference to snapshot_takeoff,FLU,direction:x to y

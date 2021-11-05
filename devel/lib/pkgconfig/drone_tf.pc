@@ -1,1 +1,0 @@
-/home/ubuntu/offb_ws/devel/.private/drone_tf/lib/pkgconfig/drone_tf.pc

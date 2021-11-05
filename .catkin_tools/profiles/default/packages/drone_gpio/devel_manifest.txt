@@ -2,7 +2,6 @@ drone_gpio
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/cmake.lock /home/ubuntu/offb_ws/devel/./cmake.lock
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/drone_gpio/drone_gpio_node /home/ubuntu/offb_ws/devel/lib/drone_gpio/drone_gpio_node
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/python2.7/dist-packages/drone_gpio/__init__.py /home/ubuntu/offb_ws/devel/lib/python2.7/dist-packages/drone_gpio/__init__.py
-/home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/python2.7/dist-packages/drone_gpio/msg/_gpio.py /home/ubuntu/offb_ws/devel/lib/python2.7/dist-packages/drone_gpio/msg/_gpio.py
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/python2.7/dist-packages/drone_gpio/msg/__init__.py /home/ubuntu/offb_ws/devel/lib/python2.7/dist-packages/drone_gpio/msg/__init__.py
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/python2.7/dist-packages/drone_gpio/msg/_PanelCtrl.py /home/ubuntu/offb_ws/devel/lib/python2.7/dist-packages/drone_gpio/msg/_PanelCtrl.py
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/lib/python2.7/dist-packages/drone_gpio/msg/_PanelState.py /home/ubuntu/offb_ws/devel/lib/python2.7/dist-packages/drone_gpio/msg/_PanelState.py
@@ -27,6 +26,7 @@ drone_gpio
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/share/roseus/ros/drone_gpio/manifest.l /home/ubuntu/offb_ws/devel/share/roseus/ros/drone_gpio/manifest.l
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/share/roseus/ros/drone_gpio/msg/PanelState.l /home/ubuntu/offb_ws/devel/share/roseus/ros/drone_gpio/msg/PanelState.l
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/share/roseus/ros/drone_gpio/msg/PanelCtrl.l /home/ubuntu/offb_ws/devel/share/roseus/ros/drone_gpio/msg/PanelCtrl.l
+/home/ubuntu/offb_ws/devel/.private/drone_gpio/include/drone_gpio/PanelCtrl.h /home/ubuntu/offb_ws/devel/include/drone_gpio/PanelCtrl.h
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/share/roseus/ros/drone_gpio/msg/gpio.l /home/ubuntu/offb_ws/devel/share/roseus/ros/drone_gpio/msg/gpio.l
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/include/drone_gpio/PanelCtrl.h /home/ubuntu/offb_ws/devel/include/drone_gpio/PanelCtrl.h
 /home/ubuntu/offb_ws/devel/.private/drone_gpio/include/drone_gpio/gpio.h /home/ubuntu/offb_ws/devel/include/drone_gpio/gpio.h
