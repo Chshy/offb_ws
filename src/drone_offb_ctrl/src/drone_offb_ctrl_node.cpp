@@ -290,68 +290,102 @@ int main(int argc, char **argv)
         ros::spinOnce();
         ros::Duration(0.01).sleep();
     }
-    while (current_state.mode != "OFFBOARD") //wait for remote command
-    {
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-        ROS_INFO("GUIDED_no");
-    }
+    // while (current_state.mode != "OFFBOARD") //wait for remote command
+    // {
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+    //     ROS_INFO("GUIDED_no");
+    // }
     ROS_INFO("GUIDED_ok");
 
     //等两秒
-    for (int i = 0; i < 200; i++)
-    {
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
+    // for (int i = 0; i < 200; i++)
+    // {
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+    // }
 
-    send_tf_snapshot_takeoff();
+    // send_tf_snapshot_takeoff();
 
-    // recheck for FCU connection
-    while (ros::ok() && !current_state.connected)
-    {
-        ros::spinOnce();
-        rate.sleep();
-    }
+    // // recheck for FCU connection
+    // while (ros::ok() && !current_state.connected)
+    // {
+    //     ros::spinOnce();
+    //     rate.sleep();
+    // }
     ROS_INFO("connected_ok");
     //arm
     // arm_drone(nh);
     //等一秒
-    for (int i = 0; i < 100; i++)
-    {
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
+    // for (int i = 0; i < 100; i++)
+    // {
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+    // }
 
-    //request takeoff
-    takeoff(nh, 1.5); //meters
-    //等10秒
-    for (int i = 0; i < 1000; i++)
-    {
-        ros::spinOnce();
-        ros::Duration(0.01).sleep();
-    }
+    // //request takeoff
+    // takeoff(nh, 1.5); //meters
+    // //等10秒
+    // for (int i = 0; i < 1000; i++)
+    // {
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+    // }
 
-    const double vF[4] = {0.2, 0, -0.2, 0};
-    const double vL[4] = {0, 0.2, 0, -0.2};
 
-    for (int mission_step = 0; mission_step < 4; mission_step++)
-    {
-        for (int i = 200; i > 0; i--)
+        double x,y,z,w;
+        while(1)
         {
             ros::spinOnce();
-            set_speed_body(vF[mission_step], vL[mission_step], 0); //flu
-            ros::Duration(0.05).sleep();
-            ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
+            tf2::Quaternion q(
+                VisionSpeed2.pose.pose.orientation.x,
+                VisionSpeed2.pose.pose.orientation.y,
+                VisionSpeed2.pose.pose.orientation.z,
+                VisionSpeed2.pose.pose.orientation.w);
+            tf2::Matrix3x3 m(q);
+            double roll, pitch, yaw;
+            m.getRPY(roll, pitch, yaw);
+            ROS_INFO("Current_RPY:%lf,%lf,%lf\r\n",roll ,pitch, yaw);
         }
-        //等2秒
-        for (int i = 0; i < 200; i++)
-        {
-            ros::spinOnce();
-            set_speed_body(0, 0, 0);
-            ros::Duration(0.01).sleep();
-        }
-    }
+
+
+
+// #define TOTAL_STEP 4
+//     const double dF[TOTAL_STEP] = {1.5, 0, -1.5, 0};
+//     const double dL[TOTAL_STEP] = {0, 1.5, 0, -1.5};
+
+//     for (int mission_step = 0; mission_step < 4; mission_step++)
+//     {
+//         double RestrainSpeed = 0.2;    // 限速 m/s
+//         double curr_f, curr_l, curr_u; //当前位置
+//         double dest_f, dest_l, dest_u; //目标位置
+        
+
+//         //获取当前T265位置(从/camera/odom/sample订阅,T265镜头朝向为x,插头的反方向为y,上方为z)
+//         //需要变换到FLU坐标系
+//         ros::spinOnce();
+//         curr_f = -VisionSpeed2.twist.twist.linear.x;
+//         curr_l = -VisionSpeed2.twist.twist.linear.y;
+//         curr_u = VisionSpeed2.twist.twist.linear.z;
+//         curr_
+
+//         //从数组读取这一步相对于上一步移动的距离(m)并保存T
+
+//         for (int i = 200; i > 0; i--)
+//         {
+//             ros::spinOnce();
+//             set_speed_body(dF[mission_step], dF[mission_step], 0); //flu
+//             ros::Duration(0.05).sleep();
+//             ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
+//         }
+//         //等2秒
+//         for (int i = 0; i < 200; i++)
+//         {
+//             ros::spinOnce();
+//             set_speed_body(0, 0, 0);
+//             ros::Duration(0.01).sleep();
+//         }
+//     }
 
     // //  move foreward
     //   setHeading(45);//in reference to snapshot_takeoff,FLU,direction:x to y
