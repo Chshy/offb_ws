@@ -1,0 +1,5 @@
+<launch>    
+    <!-- 启动控制节点 -->
+    <node pkg="drone_gpio" type="drone_gpio_node" name="drone_gpio_node" output="screen">
+    </node>
+</launch>
