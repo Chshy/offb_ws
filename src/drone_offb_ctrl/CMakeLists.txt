@@ -16,7 +16,11 @@ find_package(catkin REQUIRED COMPONENTS
   message_generation
   tf2_ros
   tf2
+  cv_bridge
+  image_transport
+  sensor_msgs
 )
+find_package(OpenCV REQUIRED)
 
 ## System dependencies are found with CMake's conventions
 find_package(Boost REQUIRED COMPONENTS system)
@@ -127,6 +131,7 @@ include_directories(
   ${catkin_INCLUDE_DIRS}
   /home/ubuntu/JetsonGPIO/include
 )
+include_directories(include ${OpenCV_INCLUDE_DIRS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
@@ -152,12 +157,15 @@ add_executable(${PROJECT_NAME}_node src/drone_offb_ctrl_node.cpp)
 ## Add cmake target dependencies of the executable
 ## same as for the library above
 add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+link_directories(${OpenCV_LIBRARY_DIRS})
 
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
+ # ${OpenCV_LIBRARIES}
   /home/ubuntu/JetsonGPIO/build/libJetsonGPIO.a
 )
+target_link_libraries(${PROJECT_NAME}_node ${OpenCV_LIBS})
 
 #############
 ## Install ##
