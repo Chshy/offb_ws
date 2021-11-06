@@ -1,0 +1,7 @@
+bool[3] led
+bool    beep
+bool    laser
+---
+bool[3] is_led_on
+bool    is_beep_on
+bool    is_laser_on 
