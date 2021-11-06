@@ -45,9 +45,10 @@ public:
 	void DefaultDataInit();
 
 	////////////////////////////////////////////////////////
-	
+
 	MissionPoint();
 	MissionPoint(MPStorageMethod StMeth, double destx, double desty);
+	MissionPoint(MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp);
 	bool inRange(double dx, double dy);
 	// bool inRange(double curr_x, double curr_y, double dest_x, double dest_y);
 };
@@ -62,9 +63,9 @@ void MissionPoint::DefaultDataInit()
 	this->CalibMeth = MPCalibMethod_SQUARE;
 	this->Caliblimtx = 0.05;
 	this->Caliblimty = 0.05;
-	this->BreakStep = 200;
+	this->BreakStep = 40;
 	this->BreakIntervalSleepTime = 0.01;
-	this->P_FACTOR = 0.7;
+	this->P_FACTOR = 1.0;
 	return;
 }
 
@@ -79,6 +80,15 @@ MissionPoint::MissionPoint(MPStorageMethod StMeth, double destx, double desty)
 	this->StorgMeth = StMeth;
 	this->xCoordinate = destx;
 	this->yCoordinate = desty;
+}
+
+MissionPoint::MissionPoint(MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp)
+{
+	this->DefaultDataInit();
+	this->StorgMeth = StMeth;
+	this->xCoordinate = destx;
+	this->yCoordinate = desty;
+	this->BreakStep = Breakstp;
 }
 
 bool MissionPoint::inRange(double dx, double dy)

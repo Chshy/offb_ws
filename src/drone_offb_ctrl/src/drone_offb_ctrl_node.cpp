@@ -365,47 +365,47 @@ int main(int argc, char **argv)
                              13, 19, 26,
                              16, 17);
 
-    ROS_INFO("Enter Test.");
-    bool bits = 0;
-    while (1)
-    {
-        // CtrlPanel.WriteLED(2, bits);
-        CtrlPanel.WriteLaser(bits);
-        bits = !bits;
-        ros::spinOnce();
-        ros::Duration(1).sleep();
-        // ROS_INFO("Key %d %d %d %d Code %d %d %d %d %d %d",
-        //          CtrlPanel.ReadKey(1),
-        //          CtrlPanel.ReadKey(2),
-        //          CtrlPanel.ReadKey(3),
-        //          CtrlPanel.ReadKey(4),
-        //          CtrlPanel.ReadCode(1),
-        //          CtrlPanel.ReadCode(2),
-        //          CtrlPanel.ReadCode(3),
-        //          CtrlPanel.ReadCode(4),
-        //          CtrlPanel.ReadCode(5),
-        //          CtrlPanel.ReadCode(6));
+    // ROS_INFO("Enter Test.");
+    // bool bits = 0;
+    // while (1)
+    // {
+    //     // CtrlPanel.WriteLED(2, bits);
+    //     CtrlPanel.WriteLaser(bits);
+    //     bits = !bits;
+    //     ros::spinOnce();
+    //     ros::Duration(1).sleep();
+    //     // ROS_INFO("Key %d %d %d %d Code %d %d %d %d %d %d",
+    //     //          CtrlPanel.ReadKey(1),
+    //     //          CtrlPanel.ReadKey(2),
+    //     //          CtrlPanel.ReadKey(3),
+    //     //          CtrlPanel.ReadKey(4),
+    //     //          CtrlPanel.ReadCode(1),
+    //     //          CtrlPanel.ReadCode(2),
+    //     //          CtrlPanel.ReadCode(3),
+    //     //          CtrlPanel.ReadCode(4),
+    //     //          CtrlPanel.ReadCode(5),
+    //     //          CtrlPanel.ReadCode(6));
 
-        ROS_INFO("Key %d %d %d %d",
-                 CtrlPanel.ReadKey(1),
-                 CtrlPanel.ReadKey(2),
-                 CtrlPanel.ReadKey(3),
-                 CtrlPanel.ReadKey(4));
+    //     ROS_INFO("Key %d %d %d %d",
+    //              CtrlPanel.ReadKey(1),
+    //              CtrlPanel.ReadKey(2),
+    //              CtrlPanel.ReadKey(3),
+    //              CtrlPanel.ReadKey(4));
 
-        // ros::spinOnce();
-        // ros::Duration(0.2).sleep();
-        // CtrlPanel.WriteLED(1,1);
-        // CtrlPanel.WriteLED(2,1);
-        // CtrlPanel.WriteLED(3,1);
-        // CtrlPanel.WriteBeep(1);
+    //     // ros::spinOnce();
+    //     // ros::Duration(0.2).sleep();
+    //     // CtrlPanel.WriteLED(1,1);
+    //     // CtrlPanel.WriteLED(2,1);
+    //     // CtrlPanel.WriteLED(3,1);
+    //     // CtrlPanel.WriteBeep(1);
 
-        // ros::spinOnce();
-        // ros::Duration(0.2).sleep();
-        // CtrlPanel.WriteLED(1,0);
-        // CtrlPanel.WriteLED(2,0);
-        // CtrlPanel.WriteLED(3,0);
-        // CtrlPanel.WriteBeep(0);
-    }
+    //     // ros::spinOnce();
+    //     // ros::Duration(0.2).sleep();
+    //     // CtrlPanel.WriteLED(1,0);
+    //     // CtrlPanel.WriteLED(2,0);
+    //     // CtrlPanel.WriteLED(3,0);
+    //     // CtrlPanel.WriteBeep(0);
+    // }
 
     // 等待飞控将 custom mode 设置为 OFFBOARD
     while (current_state.mode != "OFFBOARD") //wait for remote command
@@ -471,15 +471,49 @@ int main(int argc, char **argv)
     // const double dxStorage[TOTAL_STEP] = {1.5, 1.5, 0, 0};
     // const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
     vector<MissionPoint> MPStorage;
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 2, -0.5));
+    //到A
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 1.85, -0.5));
+    //向前1
     MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -3));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -2.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 1.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 2, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 1));
+    //向右6
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    //向后5
     MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_ABSOLUTE, 0, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0)); //10
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    //向左1
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    //向前4
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0)); //15
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    //向左1
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    //向后4
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    //向左1
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    //向前4
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    //向左2
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    //回0
+    MPStorage.push_back(MissionPoint(MPStorageMethod_ABSOLUTE, 0, 0)); //30
 
     // for (std::vector<Vocabulary>::size_type it = 0; it < list.size(); ++it)
     // {
@@ -594,12 +628,17 @@ int main(int argc, char **argv)
         }
 
         ROS_INFO("OFFB: Breaking...(%lf sec)", MPStorage[MissionStep].BreakIntervalSleepTime * MPStorage[MissionStep].BreakStep);
+        CtrlPanel.WriteBeep(1);
+        if (MissionStep != 10 && MissionStep != 15 && MissionStep != 30)
+            CtrlPanel.WriteLaser(1);
         for (int BreakCtrlStep = 0; BreakCtrlStep < MPStorage[MissionStep].BreakStep; BreakCtrlStep++)
         {
             ros::spinOnce();
             set_speed_body(0, 0, 0);
             ros::Duration(MPStorage[MissionStep].BreakIntervalSleepTime).sleep();
         }
+        CtrlPanel.WriteLaser(0);
+        CtrlPanel.WriteBeep(0);
     }
 
     //尝试降落
