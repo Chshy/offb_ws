@@ -119,6 +119,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  /home/ubuntu/JetsonGPIO/include
 )
 
 ## Declare a C++ library
@@ -149,6 +150,9 @@ add_executable(${PROJECT_NAME}_node src/drone_gpio_node.cpp)
 ## Specify libraries to link a library or executable target against
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES}
+  # /home/ubuntu/JetsonGPIO/build/JetsonGPIO.o
+  /home/ubuntu/JetsonGPIO/build/libJetsonGPIO.a
+  # /home/ubuntu/JetsonGPIO/build/gpio_pin_data.o
 )
 
 #############
