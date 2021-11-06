@@ -30,6 +30,8 @@
 
 #include "drone_offb_ctrl/MissionPoint.hpp"
 #include <vector>
+#include "JetsonGPIO.h"
+#include "drone_offb_ctrl/GPIOCtrl.hpp"
 
 using namespace std;
 using namespace mavros_msgs;
@@ -352,10 +354,57 @@ int main(int argc, char **argv)
     // allow the subscribers to initialize
     // 等待一些东西初始化
     ROS_INFO("INITILIZING...");
-    for (int i = 0; i < 100; i++)
+    for (int i = 0; i < 250; i++)
     {
         ros::spinOnce();
         ros::Duration(0.01).sleep();
+    }
+
+    GPIOController CtrlPanel(12, 7, 8, 25,
+                             0, 0, 0, 0, 0, 0,
+                             13, 19, 26,
+                             16, 17);
+
+    ROS_INFO("Enter Test.");
+    bool bits = 0;
+    while (1)
+    {
+        // CtrlPanel.WriteLED(2, bits);
+        CtrlPanel.WriteLaser(bits);
+        bits = !bits;
+        ros::spinOnce();
+        ros::Duration(1).sleep();
+        // ROS_INFO("Key %d %d %d %d Code %d %d %d %d %d %d",
+        //          CtrlPanel.ReadKey(1),
+        //          CtrlPanel.ReadKey(2),
+        //          CtrlPanel.ReadKey(3),
+        //          CtrlPanel.ReadKey(4),
+        //          CtrlPanel.ReadCode(1),
+        //          CtrlPanel.ReadCode(2),
+        //          CtrlPanel.ReadCode(3),
+        //          CtrlPanel.ReadCode(4),
+        //          CtrlPanel.ReadCode(5),
+        //          CtrlPanel.ReadCode(6));
+
+        ROS_INFO("Key %d %d %d %d",
+                 CtrlPanel.ReadKey(1),
+                 CtrlPanel.ReadKey(2),
+                 CtrlPanel.ReadKey(3),
+                 CtrlPanel.ReadKey(4));
+
+        // ros::spinOnce();
+        // ros::Duration(0.2).sleep();
+        // CtrlPanel.WriteLED(1,1);
+        // CtrlPanel.WriteLED(2,1);
+        // CtrlPanel.WriteLED(3,1);
+        // CtrlPanel.WriteBeep(1);
+
+        // ros::spinOnce();
+        // ros::Duration(0.2).sleep();
+        // CtrlPanel.WriteLED(1,0);
+        // CtrlPanel.WriteLED(2,0);
+        // CtrlPanel.WriteLED(3,0);
+        // CtrlPanel.WriteBeep(0);
     }
 
     // 等待飞控将 custom mode 设置为 OFFBOARD
@@ -422,10 +471,15 @@ int main(int argc, char **argv)
     // const double dxStorage[TOTAL_STEP] = {1.5, 1.5, 0, 0};
     // const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
     vector<MissionPoint> MPStorage;
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 1.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 2, -0.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -3));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -2.5, 0));
     MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 1.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -1.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -1.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 2, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 1));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_ABSOLUTE, 0, 0));
 
     // for (std::vector<Vocabulary>::size_type it = 0; it < list.size(); ++it)
     // {
