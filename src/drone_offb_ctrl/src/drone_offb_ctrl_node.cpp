@@ -36,6 +36,7 @@ mavros_msgs::State current_state;
 geometry_msgs::PoseStamped current_pose;
 /*pos_z and speed_xy info from t265 variables */
 geometry_msgs::TwistWithCovarianceStamped VisionSpeed2;
+geometry_msgs::PoseStamped VisionPose;
 /*pos_z and speed_xy info from t265 variables end */
 geometry_msgs::PoseStamped pose;
 std_msgs::Float64 current_heading;
@@ -44,6 +45,11 @@ tf2_ros::Buffer tfBuffer;
 ros::Publisher set_gp_origin_pub;
 ros::Publisher set_raw_pub;
 ros::Publisher local_pos_pub;
+
+double RestrianValue(double x, double limit) //该函数默认limit>0!!!!!!!!!!
+{
+    return fabs(x) <= fabs(limit) ? x : (x >= 0 ? limit : -limit);
+}
 
 //get state
 //获取飞控状态(回调函数)
@@ -163,34 +169,61 @@ int arm_drone(ros::NodeHandle &nh)
     return 0;
 }
 
+//单位是米
 int takeoff(ros::NodeHandle &nh, double height) //meters
 {
+    ROS_INFO("OFFB: Requesting takeoff...");
     ros::ServiceClient takeoff_cl = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/takeoff");
     mavros_msgs::CommandTOL srv_takeoff;
     srv_takeoff.request.altitude = height;
     if (takeoff_cl.call(srv_takeoff))
     {
-        ROS_INFO("takeoff sent %d", srv_takeoff.response.success);
+        // ROS_INFO("takeoff sent %d", srv_takeoff.response.success);
+        ROS_INFO("OFFB: Takeoff service called.");
+        if (srv_takeoff.response.success)
+        {
+            ROS_INFO("OFFB: Takeoff Sucessful.");
+            return 0;
+        }
+        else
+        {
+            ROS_ERROR("OFFB: Takeoff Failed.");
+            return -1;
+        }
     }
     else
     {
-        ROS_ERROR("Failed Takeoff");
-        return -1;
+        // ROS_ERROR("Failed Takeoff");
+        ROS_ERROR("OFFB: Call takeoff service Failed.");
+        return -2;
     }
     return 0;
 }
 
 int land(ros::NodeHandle &nh)
 {
+    ROS_INFO("OFFB: Requesting land...");
     ros::ServiceClient land_client = nh.serviceClient<mavros_msgs::CommandTOL>("/mavros/cmd/land");
     mavros_msgs::CommandTOL srv_land;
-    if (land_client.call(srv_land) && srv_land.response.success)
-        ROS_INFO("land sent %d", srv_land.response.success);
+    if (land_client.call(srv_land))
+    {
+        //ROS_INFO("land sent %d", srv_land.response.success);
+        ROS_INFO("OFFB: Land service called.");
+        if (srv_land.response.success)
+        {
+            ROS_INFO("OFFB: Land Sucessful.");
+            return 0;
+        }
+        else
+        {
+            ROS_ERROR("OFFB: Land Failed.");
+            return -1;
+        }
+    }
     else
     {
-        ROS_ERROR("Landing failed");
-        ros::shutdown();
-        return -1;
+        ROS_ERROR("OFFB: Call takeoff service Failed.");
+        return -2;
     }
     return 0;
 }
@@ -203,7 +236,7 @@ int set_speed_body(double x, double y, double z, double yaw_rate = 0) //flu mete
     if (fabs(yaw_rate) < 1e-6)
         raw_target.type_mask |= PositionTarget::IGNORE_YAW_RATE;
     raw_target.velocity.x = x;
-    raw_target.velocity.y = y;
+    raw_target.velocity.y = -y;
     raw_target.velocity.z = z;
     raw_target.yaw_rate = yaw_rate;
     set_raw_pub.publish(raw_target);
@@ -268,9 +301,36 @@ int set_break()
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom)
 {
-    VisionSpeed2.twist.twist.linear.x = odom->twist.twist.linear.x;
-    VisionSpeed2.twist.twist.linear.y = odom->twist.twist.linear.y;
+    //注意:此函数内针对T265朝后装进行变换，获取到的数据坐标系说明如下:
+    //位置:以T265启动时刻飞机位置为原点,FLU坐标系,启动时Yaw=0,从上看逆时针为Yaw正方向
+    //速度:测定时刻飞机FLU坐标系
+    //Pitch Roll 及角速度未测定!!!!!!!
+
+    //记录位置信息(相对于T265启动位置)
+    VisionPose.pose.position.x = -odom->pose.pose.position.x;
+    VisionPose.pose.position.y = -odom->pose.pose.position.y;
+    VisionPose.pose.position.z = odom->pose.pose.position.z;
+    //记录角度信息(相对于T265启动位置)
+    VisionPose.pose.orientation.x = odom->pose.pose.orientation.x;
+    VisionPose.pose.orientation.y = odom->pose.pose.orientation.y;
+    VisionPose.pose.orientation.z = odom->pose.pose.orientation.z;
+    VisionPose.pose.orientation.w = odom->pose.pose.orientation.w;
+    //记录速度信息(飞机右后下)
+    VisionSpeed2.twist.twist.linear.x = -odom->twist.twist.linear.x;
+    VisionSpeed2.twist.twist.linear.y = -odom->twist.twist.linear.y;
     VisionSpeed2.twist.twist.linear.z = odom->twist.twist.linear.z;
+    // ROS_INFO("%5.3lf %5.3lf %5.3lf %5.3lf %5.3lf %5.3lf %5.3lf %5.3lf %5.3lf %5.3lf",\
+    // VisionPose.pose.position.x = odom->pose.pose.position.x,
+    // VisionPose.pose.position.y = odom->pose.pose.position.y,
+    // VisionPose.pose.position.z = odom->pose.pose.position.z,
+    // VisionPose.pose.orientation.x = odom->pose.pose.orientation.x,
+    // VisionPose.pose.orientation.y = odom->pose.pose.orientation.y,
+    // VisionPose.pose.orientation.z = odom->pose.pose.orientation.z,
+    // VisionPose.pose.orientation.w = odom->pose.pose.orientation.w,
+    // VisionSpeed2.twist.twist.linear.x = odom->twist.twist.linear.x,
+    // VisionSpeed2.twist.twist.linear.y = odom->twist.twist.linear.y,
+    // VisionSpeed2.twist.twist.linear.z = odom->twist.twist.linear.z
+    // );
 }
 
 int main(int argc, char **argv)
@@ -287,6 +347,7 @@ int main(int argc, char **argv)
     tf2_ros::TransformListener tfListener(tfBuffer);
 
     // allow the subscribers to initialize
+    // 等待一些东西初始化
     ROS_INFO("INITILIZING...");
     for (int i = 0; i < 100; i++)
     {
@@ -294,171 +355,180 @@ int main(int argc, char **argv)
         ros::Duration(0.01).sleep();
     }
 
-    // while (current_state.mode != "OFFBOARD") //wait for remote command
-    // {
-    //     ros::spinOnce();
-    //     ros::Duration(0.01).sleep();
-    //     ROS_INFO("GUIDED_no");
-    // }
-    ROS_INFO("GUIDED_ok");
+    // 等待飞控将 custom mode 设置为 OFFBOARD
+    while (current_state.mode != "OFFBOARD") //wait for remote command
+    {
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+        ROS_INFO("OFFB: Waiting for FCU to set OFFBOARD mode...");
+    }
+    ROS_INFO("OFFB: OFFBOARD mode confirmed.");
 
-    //等两秒
-    // for (int i = 0; i < 200; i++)
-    // {
-    //     ros::spinOnce();
-    //     ros::Duration(0.01).sleep();
-    // }
+    //等0.5秒
+    for (int i = 0; i < 50; i++)
+    {
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
 
-    // send_tf_snapshot_takeoff();
+    // 记录起飞时的坐标信息(没看，不知道怎么用)
+    send_tf_snapshot_takeoff();
 
-    // // recheck for FCU connection
-    // while (ros::ok() && !current_state.connected)
-    // {
-    //     ros::spinOnce();
-    //     rate.sleep();
-    // }
+    // recheck for FCU connection
+    // 再次检查FCU连接情况
+    while (ros::ok() && !current_state.connected)
+    {
+        ros::spinOnce();
+        rate.sleep();
+    }
 
-    ROS_INFO("connected_ok");
-    //arm
+    ROS_INFO("OFFB: FCU connection confirmed. Start executing command in 1 sec.");
+    // 解锁
     // arm_drone(nh);
-    //等一秒
 
-    // for (int i = 0; i < 100; i++)
-    // {
-    //     ros::spinOnce();
-    //     ros::Duration(0.01).sleep();
-    // }
+    //等一秒
+    for (int i = 0; i < 100; i++)
+    {
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
 
     // //request takeoff
-    // takeoff(nh, 1.5); //meters
-    // //等10秒
-    // for (int i = 0; i < 1000; i++)
-    // {
-    //     ros::spinOnce();
-    //     ros::Duration(0.01).sleep();
-    // }
+    // 发送起飞命令
+    if (takeoff(nh, 1.5))
+    { //如果起飞失败
+        //发出报警
+        //退出程序
+        ros::shutdown();
+        return -1;
+    }
 
+    //等10秒 等待上升到指定高度
+    ROS_INFO("OFFB: Waiting for climbing...");
+    for (int i = 0; i < 1000; i++)
+    {
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
 
-        double x,y,z,w;
-        while(1)
+    //开始水平运动
+    ROS_INFO("OFFB: Start horizontal movement.");
+#define TOTAL_STEP 4
+#define MAX_CTRL_STEP 400
+#define P_FACTOR 0.55
+    const double dxStorage[TOTAL_STEP] = {1.5, 1.5, 0, 0};
+    const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
+
+    for (int MissionStep = 0; MissionStep < TOTAL_STEP; MissionStep++)
+    {
+        ROS_INFO("OFFB: Current control step: %d.", MissionStep);
+        //---------------------------------------------
+        double RestrainSpeed = 0.4; // 限速 m/s
+
+        double curr_x = 0, curr_y = 0, curr_z = 0; //当前位置(Gym Frame)
+        double curr_roll = 0, curr_pitch = 0, curr_yaw = 0;
+
+        double dest_x = 0, dest_y = 0, dest_z = 0, dest_yaw = 0; //目标位置(Gym Frame)
+
+        double dx = 0, dy = 0, dz = 0, dw = 0;
+        double df_body = 0, dl_body = 0;
+
+        //////////////////////////////////////////////
+
+        // set_speed_body(dF[MissionStep], dF[MissionStep], 0); //flu
+
+        //获取当前T265位置(回调函数内已取反)
+        // ros::spinOnce();
+        // curr_x = VisionPose.pose.position.x;
+        // curr_y = VisionPose.pose.position.y;
+        // curr_z = VisionPose.pose.position.z;
+
+        //从数组读取这一步相对于上一步移动的距离(m)并保存
+        dest_x = dxStorage[MissionStep];
+        dest_y = dyStorage[MissionStep];
+
+        ROS_INFO("OFFB: Moving to %lf %lf...", dest_x, dest_y);
+        int CtrlStep;
+        for (CtrlStep = 0; CtrlStep < MAX_CTRL_STEP; CtrlStep++)
         {
+            //获取当前T265位置(回调函数内已取反)
             ros::spinOnce();
+            curr_x = VisionPose.pose.position.x;
+            curr_y = VisionPose.pose.position.y;
+            curr_z = VisionPose.pose.position.z;
+
+            //获取当前Yaw角度
             tf2::Quaternion q(
-                VisionSpeed2.pose.pose.orientation.x,
-                VisionSpeed2.pose.pose.orientation.y,
-                VisionSpeed2.pose.pose.orientation.z,
-                VisionSpeed2.pose.pose.orientation.w);
+                VisionPose.pose.orientation.x,
+                VisionPose.pose.orientation.y,
+                VisionPose.pose.orientation.z,
+                VisionPose.pose.orientation.w);
+            q.normalize();
             tf2::Matrix3x3 m(q);
-            double roll, pitch, yaw;
-            m.getRPY(roll, pitch, yaw);
-            ROS_INFO("Current_RPY:%lf,%lf,%lf\r\n",roll ,pitch, yaw);
+            m.getRPY(curr_roll, curr_pitch, curr_yaw);
+
+            //计算位移矢量(以当前飞机为起点,目的地为终点)
+            dx = dest_x - curr_x;
+            dy = dest_y - curr_y;
+            // dz = dest_z - curr_z;
+            // dw = dest_w - curr_w;
+
+            //判断误差是否在容忍范围内,如果在则退出控制
+            if (fabs(dx) < 0.05 && fabs(dy) < 0.05)
+            {
+                break;
+            }
+
+            //将位移矢量旋转至BodyHeading(FLU)下,用于控制飞机速度
+            df_body = dx * cos(-curr_yaw) - dy * sin(-curr_yaw);
+            dl_body = dx * sin(-curr_yaw) + dy * cos(-curr_yaw);
+
+            //乘以P控制参数 并限幅
+            df_body = RestrianValue(df_body * P_FACTOR, RestrainSpeed);
+            dl_body = RestrianValue(dl_body * P_FACTOR, RestrainSpeed);
+
+            ROS_INFO("OFFB: x=%lf y=%lf z=%lf yaw=%lf df=%lf dl=%lf", curr_x, curr_y, curr_z, curr_yaw, df_body, dl_body);
+
+            set_speed_body(df_body, dl_body, 0); //FLU坐标系
+            ros::Duration(0.05).sleep();
+            // ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
+        }
+        if (CtrlStep >= MAX_CTRL_STEP)
+        {
+            ROS_WARN("OFFB: Control Timeout. Position may be imprecise!");
+        }
+        else
+        {
+            ROS_INFO("OFFB: Destination (%lf,%lf) reached.", dest_x, dest_y);
         }
 
+        ROS_INFO("OFFB: Breaking...");
+        //等2秒
+        for (int i = 0; i < 200; i++)
+        {
+            ros::spinOnce();
+            set_speed_body(0, 0, 0);
+            ros::Duration(0.01).sleep();
+        }
+    }
 
+    //尝试降落
+    uint8_t land_time;
+    for (land_time = 1; land(nh) < 0 && land_time <= 3; land_time++)
+    {
+        ROS_WARN("OFFB: Try again.(%d)", land_time);
+    };
 
-// #define TOTAL_STEP 4
-//     const double dF[TOTAL_STEP] = {1.5, 0, -1.5, 0};
-//     const double dL[TOTAL_STEP] = {0, 1.5, 0, -1.5};
-
-//     for (int mission_step = 0; mission_step < 4; mission_step++)
-//     {
-//         double RestrainSpeed = 0.2;    // 限速 m/s
-//         double curr_f, curr_l, curr_u; //当前位置
-//         double dest_f, dest_l, dest_u; //目标位置
-        
-
-//         //获取当前T265位置(从/camera/odom/sample订阅,T265镜头朝向为x,插头的反方向为y,上方为z)
-//         //需要变换到FLU坐标系
-//         ros::spinOnce();
-//         curr_f = -VisionSpeed2.twist.twist.linear.x;
-//         curr_l = -VisionSpeed2.twist.twist.linear.y;
-//         curr_u = VisionSpeed2.twist.twist.linear.z;
-//         curr_
-
-//         //从数组读取这一步相对于上一步移动的距离(m)并保存T
-
-//         for (int i = 200; i > 0; i--)
-//         {
-//             ros::spinOnce();
-//             set_speed_body(dF[mission_step], dF[mission_step], 0); //flu
-//             ros::Duration(0.05).sleep();
-//             ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
-//         }
-//         //等2秒
-//         for (int i = 0; i < 200; i++)
-//         {
-//             ros::spinOnce();
-//             set_speed_body(0, 0, 0);
-//             ros::Duration(0.01).sleep();
-//         }
-//     }
-
-
-    // //  move foreward
-    //   setHeading(45);//in reference to snapshot_takeoff,FLU,direction:x to y
-    //   setDestination(2, 0, 1.5);//in reference to snapshot_takeoff,FLU
-    //   float tollorance = .35;
-    //   if (local_pos_pub)
-    //   {
-
-    //     for (int i = 10000; ros::ok() && i > 0; --i)
-    //     {
-
-    //       local_pos_pub.publish(pose);
-
-    //       float deltaX = abs(pose.pose.position.x - current_pose.pose.position.x);
-    //       float deltaY = abs(pose.pose.position.y - current_pose.pose.position.y);
-    //       float deltaZ = abs(pose.pose.position.z - current_pose.pose.position.z);
-    //       //cout << " dx " << deltaX << " dy " << deltaY << " dz " << deltaZ << endl;
-    //       float dMag = sqrt( pow(deltaX, 2) + pow(deltaY, 2) + pow(deltaZ, 2) );
-    //       cout << dMag << endl;
-    //       if( dMag < tollorance)
-    //       {
-    //         break;
-    //       }
-    //       ros::spinOnce();
-    //       ros::Duration(0.5).sleep();
-    //       if(i == 1)
-    //       {
-    //         ROS_INFO("Failed to reach destination. Stepping to next task.");
-    //       }
-    //     }
-    //     ROS_INFO("Done moving foreward.");
-    //   }
-
-    /*******************test run starts*******************/
-
-    // float yaw = 45*(M_PI/180);//YAW: from X(E) to Y(N) in ENU frame with X(E) axis being 0 deg
-    // float pitch = 0;//level
-    // float roll = 0;//level
-
-    // float cy = cos(yaw * 0.5);
-    // float sy = sin(yaw * 0.5);
-    // float cr = cos(roll * 0.5);
-    // float sr = sin(roll * 0.5);
-    // float cp = cos(pitch * 0.5);
-    // float sp = sin(pitch * 0.5);
-
-    // float qw = cy * cr * cp + sy * sr * sp;
-    // float qx = cy * sr * cp - sy * cr * sp;
-    // float qy = cy * cr * sp + sy * sr * cp;
-    // float qz = sy * cr * cp - cy * sr * sp;
-
-    // pose.pose.orientation.w = qw;
-    // pose.pose.orientation.x = qx;
-    // pose.pose.orientation.y = qy;
-    // pose.pose.orientation.z = qz;
-
-    // pose.pose.position.x = 0;
-    // pose.pose.position.y = 0;
-    // pose.pose.position.z = 0;
-    // local_pos_pub.publish(pose);
-
-    /*******************test run ends*********************/
-    //S sleep(10);
-    //land
-    land(nh);
-
+    if (land_time > 3)
+    {
+        ROS_ERROR("OFFB: Failed landing! Please Control Manually!!");
+        ros::shutdown();
+        return -1;
+    }
+    else
+    {
+        ROS_INFO("OFFB: Land Sucessful.");
+    }
     while (ros::ok())
     {
         ros::spinOnce();
