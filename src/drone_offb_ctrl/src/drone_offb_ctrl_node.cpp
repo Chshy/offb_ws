@@ -51,6 +51,15 @@ ros::Publisher set_gp_origin_pub;
 ros::Publisher set_raw_pub;
 ros::Publisher local_pos_pub;
 
+bool T265_Present = false;
+
+void ExitRosNode()
+{   
+    GPIO::cleanup();
+    ros::shutdown();
+    return;
+}
+
 double RestrianValue(double x, double limit) //该函数默认limit>0!!!!!!!!!!
 {
     return fabs(x) <= fabs(limit) ? x : (x >= 0 ? limit : -limit);
@@ -306,6 +315,7 @@ int set_break()
 
 void odomCallback(const nav_msgs::Odometry::ConstPtr &odom)
 {
+    T265_Present = true;
     //注意:此函数内针对T265朝后装进行变换，获取到的数据坐标系说明如下:
     //位置:以T265启动时刻飞机位置为原点,FLU坐标系,启动时Yaw=0,从上看逆时针为Yaw正方向
     //速度:测定时刻飞机FLU坐标系
@@ -351,8 +361,16 @@ int main(int argc, char **argv)
     ros::Subscriber odomSub = nh.subscribe<nav_msgs::Odometry>("/camera/odom/sample", 10, odomCallback);
     tf2_ros::TransformListener tfListener(tfBuffer);
 
+    GPIOController CtrlPanel(12, 7, 8, 25,
+                             0, 0, 0, 0, 0, 0,
+                             13, 19, 26,
+                             16, 17);
+
     // allow the subscribers to initialize
     // 等待一些东西初始化
+    CtrlPanel.WriteLED(1, 1);
+    CtrlPanel.WriteLED(2, 1);
+    CtrlPanel.WriteLED(3, 1);
     ROS_INFO("INITILIZING...");
     for (int i = 0; i < 250; i++)
     {
@@ -360,10 +378,8 @@ int main(int argc, char **argv)
         ros::Duration(0.01).sleep();
     }
 
-    GPIOController CtrlPanel(12, 7, 8, 25,
-                             0, 0, 0, 0, 0, 0,
-                             13, 19, 26,
-                             16, 17);
+    //检查T265信息是否发布
+
 
     // ROS_INFO("Enter Test.");
     // bool bits = 0;
@@ -407,15 +423,74 @@ int main(int argc, char **argv)
     //     // CtrlPanel.WriteBeep(0);
     // }
 
+    bool bits = 0;
+    uint8_t display_digit = 1;
+    uint8_t display_cnt = 0;
+    CtrlPanel.WriteLED(1, 0);
+    CtrlPanel.WriteLED(2, 0);
+    CtrlPanel.WriteLED(3, 0);
+    while (!T265_Present) //wait for remote command
+    {
+        ROS_INFO("OFFB: Waiting for T265 Publish ...");
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+        
+
+        if(CtrlPanel.ReadKey(1))
+        {
+            CtrlPanel.WriteBeep(1);
+            ros::Duration(2.0).sleep();
+            CtrlPanel.WriteBeep(0);
+            ExitRosNode();
+            return 0;
+        }
+        
+        //灯光闪烁
+        display_cnt++;
+        if (display_cnt >= 50)
+        {
+            display_cnt = 0;
+            CtrlPanel.WriteLED(3, bits = !bits);    
+        }
+    }
+
     // 等待飞控将 custom mode 设置为 OFFBOARD
+    display_digit = 1;
+    display_cnt = 0;
     while (current_state.mode != "OFFBOARD") //wait for remote command
     {
         ros::spinOnce();
         ros::Duration(0.01).sleep();
         ROS_INFO("OFFB: Waiting for FCU to set OFFBOARD mode...");
+
+        if(CtrlPanel.ReadKey(1))
+        {
+            CtrlPanel.WriteBeep(1);
+            ros::Duration(2.0).sleep();
+            CtrlPanel.WriteBeep(0);
+            ExitRosNode();
+            return 0;
+        }
+        
+
+        //灯光闪烁
+        display_cnt++;
+        if (display_cnt >= 50)
+        {
+            display_cnt = 0;
+            display_digit *= 2;
+            if (display_digit > 7)
+                display_digit = 1;
+            CtrlPanel.WriteLED(1, display_digit & 1);
+            CtrlPanel.WriteLED(2, display_digit & 2);
+            CtrlPanel.WriteLED(3, display_digit & 4);
+        }
     }
     ROS_INFO("OFFB: OFFBOARD mode confirmed.");
-
+    CtrlPanel.WriteLED(1, 0);
+    CtrlPanel.WriteLED(2, 0);
+    CtrlPanel.WriteLED(3, 0);
+    CtrlPanel.WriteBeep(1);
     //等0.5秒
     for (int i = 0; i < 50; i++)
     {
@@ -445,13 +520,15 @@ int main(int argc, char **argv)
         ros::Duration(0.01).sleep();
     }
 
+    CtrlPanel.WriteBeep(0);
+
     // //request takeoff
     // 发送起飞命令
     if (takeoff(nh, 1.5))
     { //如果起飞失败
         //发出报警
         //退出程序
-        ros::shutdown();
+        ExitRosNode();
         return -1;
     }
 
@@ -651,7 +728,7 @@ int main(int argc, char **argv)
     if (land_time > 3)
     {
         ROS_ERROR("OFFB: Failed landing! Please Control Manually!!");
-        ros::shutdown();
+        ExitRosNode();
         return -1;
     }
     else
