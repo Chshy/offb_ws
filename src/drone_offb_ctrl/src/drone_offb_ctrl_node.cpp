@@ -28,6 +28,9 @@
 #include <nav_msgs/Odometry.h>
 #include <geometry_msgs/TwistWithCovarianceStamped.h>
 
+#include "drone_offb_ctrl/MissionPoint.hpp"
+#include <vector>
+
 using namespace std;
 using namespace mavros_msgs;
 
@@ -413,23 +416,38 @@ int main(int argc, char **argv)
 
     //开始水平运动
     ROS_INFO("OFFB: Start horizontal movement.");
-#define TOTAL_STEP 4
-#define MAX_CTRL_STEP 400
-#define P_FACTOR 0.55
-    const double dxStorage[TOTAL_STEP] = {1.5, 1.5, 0, 0};
-    const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
+    // #define TOTAL_STEP 4
+    // #define MAX_CTRL_STEP 400
+    // #define P_FACTOR 0.55
+    // const double dxStorage[TOTAL_STEP] = {1.5, 1.5, 0, 0};
+    // const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
+    vector<MissionPoint> MPStorage;
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 1.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 1.5));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -1.5, 0));
+    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -1.5));
 
-    for (int MissionStep = 0; MissionStep < TOTAL_STEP; MissionStep++)
+    // for (std::vector<Vocabulary>::size_type it = 0; it < list.size(); ++it)
+    // {
+    //     if ((list[it].word.compare(input)) == 0) //两个字符串相等
+    //     {
+    //         return it;
+    //     }
+    // }
+
+    double dest_x = 0, dest_y = 0, dest_z = 0, dest_yaw = 0; //目标位置(Gym Frame)
+    for (std::vector<MissionPoint>::size_type MissionStep = 0; MissionStep < MPStorage.size(); ++MissionStep)
+    // for (int MissionStep = 0; MissionStep < TOTAL_STEP; MissionStep++)
     {
-        ROS_INFO("OFFB: Current control step: %d.", MissionStep);
+        ROS_INFO("OFFB: Current control step: %d.", (int)MissionStep);
         //---------------------------------------------
-        double RestrainSpeed = 0.4; // 限速 m/s
+        // double RestrainSpeed = 0.4; // 限速 m/s
 
+        //当前值
         double curr_x = 0, curr_y = 0, curr_z = 0; //当前位置(Gym Frame)
         double curr_roll = 0, curr_pitch = 0, curr_yaw = 0;
 
-        double dest_x = 0, dest_y = 0, dest_z = 0, dest_yaw = 0; //目标位置(Gym Frame)
-
+        //误差值
         double dx = 0, dy = 0, dz = 0, dw = 0;
         double df_body = 0, dl_body = 0;
 
@@ -444,12 +462,30 @@ int main(int argc, char **argv)
         // curr_z = VisionPose.pose.position.z;
 
         //从数组读取这一步相对于上一步移动的距离(m)并保存
-        dest_x = dxStorage[MissionStep];
-        dest_y = dyStorage[MissionStep];
+        switch (MPStorage[MissionStep].StorgMeth)
+        {
+        case MPStorageMethod_ABSOLUTE:
+        {
+            dest_x = MPStorage[MissionStep].xCoordinate;
+            dest_y = MPStorage[MissionStep].yCoordinate;
+        }
+        break;
+        case MPStorageMethod_RELATIVE:
+        {
+            dest_x += MPStorage[MissionStep].xCoordinate;
+            dest_y += MPStorage[MissionStep].yCoordinate;
+        }
+        break;
+        default:
+            break;
+        }
 
-        ROS_INFO("OFFB: Moving to %lf %lf...", dest_x, dest_y);
+        // dest_x = dxStorage[MissionStep];
+        // dest_y = dyStorage[MissionStep];
+
+        ROS_INFO("OFFB: Moving to %lf %lf...(%lf sec MAX)", dest_x, dest_y, MPStorage[MissionStep].IntervalSleepTime * MPStorage[MissionStep].MaxCtrlStep);
         int CtrlStep;
-        for (CtrlStep = 0; CtrlStep < MAX_CTRL_STEP; CtrlStep++)
+        for (CtrlStep = 0; CtrlStep < MPStorage[MissionStep].MaxCtrlStep; CtrlStep++)
         {
             //获取当前T265位置(回调函数内已取反)
             ros::spinOnce();
@@ -474,7 +510,7 @@ int main(int argc, char **argv)
             // dw = dest_w - curr_w;
 
             //判断误差是否在容忍范围内,如果在则退出控制
-            if (fabs(dx) < 0.05 && fabs(dy) < 0.05)
+            if (MPStorage[MissionStep].inRange(dx, dy))
             {
                 break;
             }
@@ -484,16 +520,17 @@ int main(int argc, char **argv)
             dl_body = dx * sin(-curr_yaw) + dy * cos(-curr_yaw);
 
             //乘以P控制参数 并限幅
-            df_body = RestrianValue(df_body * P_FACTOR, RestrainSpeed);
-            dl_body = RestrianValue(dl_body * P_FACTOR, RestrainSpeed);
+            df_body = RestrianValue(df_body * MPStorage[MissionStep].P_FACTOR, MPStorage[MissionStep].RestrainSpeed);
+            dl_body = RestrianValue(dl_body * MPStorage[MissionStep].P_FACTOR, MPStorage[MissionStep].RestrainSpeed);
 
             ROS_INFO("OFFB: x=%lf y=%lf z=%lf yaw=%lf df=%lf dl=%lf", curr_x, curr_y, curr_z, curr_yaw, df_body, dl_body);
 
             set_speed_body(df_body, dl_body, 0); //FLU坐标系
-            ros::Duration(0.05).sleep();
+            ros::Duration(MPStorage[MissionStep].IntervalSleepTime).sleep();
             // ROS_INFO("CB:%lf %lf %lf\n", VisionSpeed2.twist.twist.linear.x, VisionSpeed2.twist.twist.linear.y, VisionSpeed2.twist.twist.linear.z);
         }
-        if (CtrlStep >= MAX_CTRL_STEP)
+
+        if (CtrlStep >= MPStorage[MissionStep].MaxCtrlStep)
         {
             ROS_WARN("OFFB: Control Timeout. Position may be imprecise!");
         }
@@ -502,13 +539,12 @@ int main(int argc, char **argv)
             ROS_INFO("OFFB: Destination (%lf,%lf) reached.", dest_x, dest_y);
         }
 
-        ROS_INFO("OFFB: Breaking...");
-        //等2秒
-        for (int i = 0; i < 200; i++)
+        ROS_INFO("OFFB: Breaking...(%lf sec)", MPStorage[MissionStep].BreakIntervalSleepTime * MPStorage[MissionStep].BreakStep);
+        for (int BreakCtrlStep = 0; BreakCtrlStep < MPStorage[MissionStep].BreakStep; BreakCtrlStep++)
         {
             ros::spinOnce();
             set_speed_body(0, 0, 0);
-            ros::Duration(0.01).sleep();
+            ros::Duration(MPStorage[MissionStep].BreakIntervalSleepTime).sleep();
         }
     }
 
