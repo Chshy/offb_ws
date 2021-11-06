@@ -54,7 +54,7 @@ ros::Publisher local_pos_pub;
 bool T265_Present = false;
 
 void ExitRosNode()
-{   
+{
     GPIO::cleanup();
     ros::shutdown();
     return;
@@ -379,50 +379,6 @@ int main(int argc, char **argv)
     }
 
     //检查T265信息是否发布
-
-
-    // ROS_INFO("Enter Test.");
-    // bool bits = 0;
-    // while (1)
-    // {
-    //     // CtrlPanel.WriteLED(2, bits);
-    //     CtrlPanel.WriteLaser(bits);
-    //     bits = !bits;
-    //     ros::spinOnce();
-    //     ros::Duration(1).sleep();
-    //     // ROS_INFO("Key %d %d %d %d Code %d %d %d %d %d %d",
-    //     //          CtrlPanel.ReadKey(1),
-    //     //          CtrlPanel.ReadKey(2),
-    //     //          CtrlPanel.ReadKey(3),
-    //     //          CtrlPanel.ReadKey(4),
-    //     //          CtrlPanel.ReadCode(1),
-    //     //          CtrlPanel.ReadCode(2),
-    //     //          CtrlPanel.ReadCode(3),
-    //     //          CtrlPanel.ReadCode(4),
-    //     //          CtrlPanel.ReadCode(5),
-    //     //          CtrlPanel.ReadCode(6));
-
-    //     ROS_INFO("Key %d %d %d %d",
-    //              CtrlPanel.ReadKey(1),
-    //              CtrlPanel.ReadKey(2),
-    //              CtrlPanel.ReadKey(3),
-    //              CtrlPanel.ReadKey(4));
-
-    //     // ros::spinOnce();
-    //     // ros::Duration(0.2).sleep();
-    //     // CtrlPanel.WriteLED(1,1);
-    //     // CtrlPanel.WriteLED(2,1);
-    //     // CtrlPanel.WriteLED(3,1);
-    //     // CtrlPanel.WriteBeep(1);
-
-    //     // ros::spinOnce();
-    //     // ros::Duration(0.2).sleep();
-    //     // CtrlPanel.WriteLED(1,0);
-    //     // CtrlPanel.WriteLED(2,0);
-    //     // CtrlPanel.WriteLED(3,0);
-    //     // CtrlPanel.WriteBeep(0);
-    // }
-
     bool bits = 0;
     uint8_t display_digit = 1;
     uint8_t display_cnt = 0;
@@ -434,9 +390,8 @@ int main(int argc, char **argv)
         ROS_INFO("OFFB: Waiting for T265 Publish ...");
         ros::spinOnce();
         ros::Duration(0.01).sleep();
-        
 
-        if(CtrlPanel.ReadKey(1))
+        if (CtrlPanel.ReadKey(1))
         {
             CtrlPanel.WriteBeep(1);
             ros::Duration(2.0).sleep();
@@ -444,13 +399,12 @@ int main(int argc, char **argv)
             ExitRosNode();
             return 0;
         }
-        
         //灯光闪烁
         display_cnt++;
         if (display_cnt >= 50)
         {
             display_cnt = 0;
-            CtrlPanel.WriteLED(3, bits = !bits);    
+            CtrlPanel.WriteLED(3, bits = !bits);
         }
     }
 
@@ -462,8 +416,7 @@ int main(int argc, char **argv)
         ros::spinOnce();
         ros::Duration(0.01).sleep();
         ROS_INFO("OFFB: Waiting for FCU to set OFFBOARD mode...");
-
-        if(CtrlPanel.ReadKey(1))
+        if (CtrlPanel.ReadKey(1))
         {
             CtrlPanel.WriteBeep(1);
             ros::Duration(2.0).sleep();
@@ -471,8 +424,6 @@ int main(int argc, char **argv)
             ExitRosNode();
             return 0;
         }
-        
-
         //灯光闪烁
         display_cnt++;
         if (display_cnt >= 50)
