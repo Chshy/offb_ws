@@ -1,0 +1,1 @@
+/home/ubuntu/offb_ws/devel/.private/drone_gpio/share/roseus/ros/drone_gpio/srv/PanelCtrl.l
