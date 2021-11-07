@@ -560,6 +560,12 @@ int main(int argc, char **argv)
     // 等待飞控将 custom mode 设置为 OFFBOARD
     display_digit = 1;
     display_cnt = 0;
+
+#define MAX_MISSION_NUM 3
+    int SelectedMissionInd = 1; //从1开始
+    //1.检测颜色
+    //2.检测颜色,找杆子
+    //3.基本要求
     while (current_state.mode != "OFFBOARD") //wait for remote command
     {
         ros::spinOnce();
@@ -572,6 +578,22 @@ int main(int argc, char **argv)
             CtrlPanel.WriteBeep(0);
             ExitRosNode();
             return 0;
+        }
+        if (CtrlPanel.ReadKey(2))
+        {
+            SelectedMissionInd++;
+            if (SelectedMissionInd > MAX_MISSION_NUM)
+            {
+                SelectedMissionInd = 1;
+            }
+
+            for (int i = 0; i < SelectedMissionInd; i++)
+            {
+                CtrlPanel.WriteBeep(1);
+                ros::Duration(0.2).sleep();
+                CtrlPanel.WriteBeep(0);
+                ros::Duration(0.2).sleep();
+            }
         }
         //灯光闪烁
         display_cnt++;
@@ -648,51 +670,138 @@ int main(int argc, char **argv)
     // const double dxStorage[TOTAL_STEP] = {1.5, 1.5, 0, 0};
     // const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
     vector<MissionPoint> MPStorage;
-    //到A
-    MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1.85, -0.5));
-    //向前1
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    //向右6
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
-    //向后5
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_RELATIVE, -0.5, 0)); //10
-    // MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0)); //ALT
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    //向左1
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
-    //向前4
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_RELATIVE, 0.5, 0)); //15
-    // MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0)); //ALT
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    //向左1
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
-    //向后4
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-    //向左1
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
-    //向前4
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-    //向左2
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
-    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
-    //回0
-    MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+    if (SelectedMissionInd == 1)
+    {
+        //到A
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1.85, -0.5));
+        //向前1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向右6
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        //向后5
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向前4
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向后4
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向前4
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向左2
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //回0
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+    }
+    else if (SelectedMissionInd == 2)
+    {
+        //到A
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1.85, -0.5));
+        //向前1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向右6
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+        //向后5
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向前4
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向后4
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向前4
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向左2
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //回0
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+    }
+    else if (SelectedMissionInd == 3)
+    {
+        //到A
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1.85, -0.5));
+        //向前1
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向右6
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, -0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, -0.5));
+        //向后5
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向前4
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向后4
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
+        //向左1
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //向前4
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
+        //向左2
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
+        //回0
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+    }
 
     // for (std::vector<Vocabulary>::size_type it = 0; it < list.size(); ++it)
     // {
@@ -808,7 +917,7 @@ int main(int argc, char **argv)
 
         ROS_INFO("OFFB: Breaking...(%lf sec)", MPStorage[MissionStep].BreakIntervalSleepTime * MPStorage[MissionStep].BreakStep);
         CtrlPanel.WriteBeep(1);
-        
+
         if (MPStorage[MissionStep].MissionPayload == MissionPayload_Laser)
         {
             CtrlPanel.WriteLaser(1);
