@@ -33,6 +33,12 @@
 #include "JetsonGPIO.h"
 #include "drone_offb_ctrl/GPIOCtrl.hpp"
 
+#include <cv_bridge/cv_bridge.h>
+#include <opencv2/opencv.hpp>
+#include <sensor_msgs/Image.h>
+#include <drone_offb_ctrl/image_converter.hpp>
+#include <drone_offb_ctrl/d435_subscriber.hpp>
+
 using namespace std;
 using namespace mavros_msgs;
 
@@ -385,10 +391,91 @@ int main(int argc, char **argv)
     CtrlPanel.WriteLED(1, 0);
     CtrlPanel.WriteLED(2, 0);
     CtrlPanel.WriteLED(3, 0);
-    while (!T265_Present) //wait for remote command
+    // while (!T265_Present) //wait for remote command
+    // {
+    //     ROS_INFO("OFFB: Waiting for T265 Publish ...");
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+
+    //     if (CtrlPanel.ReadKey(1))
+    //     {
+    //         CtrlPanel.WriteBeep(1);
+    //         ros::Duration(2.0).sleep();
+    //         CtrlPanel.WriteBeep(0);
+    //         ExitRosNode();
+    //         return 0;
+    //     }
+    //     //灯光闪烁
+    //     display_cnt++;
+    //     if (display_cnt >= 50)
+    //     {
+    //         display_cnt = 0;
+    //         CtrlPanel.WriteLED(3, bits = !bits);
+    //     }
+    // }
+
+    display_digit = 1;
+    display_cnt = 0;
+    image_converter usbcam(nh, "/usb_cam/image_raw", 10, sensor_msgs::image_encodings::BGR8);
+    ROS_INFO("Enter Test");
+    while (1)
     {
-        ROS_INFO("OFFB: Waiting for T265 Publish ...");
+
         ros::spinOnce();
+
+        if (usbcam.new_img_come())
+        {
+            cv::Mat src = usbcam.get_cv_img();
+
+            //设定测量范围
+            int xx, yy, rr;
+            xx = 308; //320
+            yy = 235; //240
+            rr = 10;
+            cv::Rect center_rect(xx - rr, yy - rr, 2 * rr, 2 * rr);
+
+            cv::Mat center_img = src(center_rect);
+            cv::Mat center_img_proc;//, center_img_inrange;
+            cv::Mat tmpmat;
+
+            cv::cvtColor(center_img, center_img_proc, cv::COLOR_BGR2HSV);
+            cv::inRange(center_img_proc, cv::Scalar(72, 0, 108), cv::Scalar(77, 255, 255), center_img_proc);
+            cv::Mat kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+            cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_OPEN, kernel_size);
+            cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_CLOSE, kernel_size);
+            cv::cvtColor(center_img_proc, tmpmat, cv::COLOR_GRAY2BGR);
+            cv::imshow("tmpmat", tmpmat);
+
+            // cv::Mat tmp_m, tmp_sd;
+            double m = 0, sd = 0;
+            m = cv::mean(center_img_proc)[0];
+            // cout << "Mean: " << m << endl;
+            // meanStdDev(gray, tmp_m, tmp_sd);
+            // m = tmp_m.at<double>(0, 0);
+            // sd = tmp_sd.at<double>(0, 0);
+            // cout << "Mean: " << m << " , StdDev: " << sd << endl;
+            // char tmpstr[64];
+            // sprintf(tmpstr, "Mean=%lf", m);
+            // cv::putText(src, "", cv::Point(5, 5), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 0), 3);
+            ROS_INFO("OFFB: CV: Mean=%lf", m);
+            cv::line(src, cv::Point(xx, 0), cv::Point(xx, 480), cv::Scalar(0, 0, 0));
+            cv::line(src, cv::Point(0, yy), cv::Point(640, yy), cv::Scalar(0, 0, 0));
+            // cv::circle(src, cv::Point(xx, yy), rr, cv::Scalar(0, 0, 0));
+            cv::rectangle(src, center_rect, cv::Scalar(0, 0, 0));
+            cv::imshow("usb_cam", src);
+            // cv::imshow("center_img_inrange", center_img_inrange);
+
+            cv::Mat src1, src2, src3;
+            cv::cvtColor(src, src1, cv::COLOR_BGR2HSV);
+            cv::inRange(src1, cv::Scalar(72, 0, 108), cv::Scalar(77, 255, 255), src2);
+            kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
+            cv::morphologyEx(src2, src2, cv::MORPH_OPEN, kernel_size);
+            cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_CLOSE, kernel_size);
+            cv::cvtColor(src2, src3, cv::COLOR_GRAY2BGR);
+            cv::imshow("usb_cam22", src3);
+        }
+        cv::waitKey(1);
+
         ros::Duration(0.01).sleep();
 
         if (CtrlPanel.ReadKey(1))
@@ -404,7 +491,7 @@ int main(int argc, char **argv)
         if (display_cnt >= 50)
         {
             display_cnt = 0;
-            CtrlPanel.WriteLED(3, bits = !bits);
+            CtrlPanel.WriteLaser(bits = !bits);
         }
     }
 

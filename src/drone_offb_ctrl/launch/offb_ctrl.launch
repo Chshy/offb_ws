@@ -12,7 +12,10 @@
     <include file="/home/ubuntu/catkin_ws/src/vision_to_mavros/launch/t265_tf_to_mavros.launch">
     </include>
     
-    
+    <!-- 启动USB摄像头节点 -->   
+    <include file="/home/ubuntu/offb_ws/src/usb_cam/launch/usb_cam.launch">
+    </include>
+
     <!-- 启动控制节点 -->
     <node pkg="drone_offb_ctrl" type="drone_offb_ctrl_node" name="drone_offb_ctrl_node" output="screen">
     </node>
