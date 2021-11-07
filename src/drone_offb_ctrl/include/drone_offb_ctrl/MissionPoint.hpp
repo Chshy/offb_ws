@@ -20,6 +20,9 @@ class MissionPoint
 {
 private:
 public:
+	//任务标记号
+	uint8_t MissionPayload;
+
 	//目标点坐标
 	MPStorageMethod StorgMeth;
 	double xCoordinate; //T265坐标系x
@@ -47,14 +50,15 @@ public:
 	////////////////////////////////////////////////////////
 
 	MissionPoint();
-	MissionPoint(MPStorageMethod StMeth, double destx, double desty);
-	MissionPoint(MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp);
+	MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty);
+	MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp);
 	bool inRange(double dx, double dy);
 	// bool inRange(double curr_x, double curr_y, double dest_x, double dest_y);
 };
 
 void MissionPoint::DefaultDataInit()
 {
+	this->MissionPayload = 0;
 	this->xCoordinate = 0;
 	this->yCoordinate = 0;
 	this->RestrainSpeed = 0.55;
@@ -74,17 +78,19 @@ MissionPoint::MissionPoint()
 	this->DefaultDataInit();
 }
 
-MissionPoint::MissionPoint(MPStorageMethod StMeth, double destx, double desty)
+MissionPoint::MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty)
 {
 	this->DefaultDataInit();
+	this->MissionPayload=Payload;
 	this->StorgMeth = StMeth;
 	this->xCoordinate = destx;
 	this->yCoordinate = desty;
 }
 
-MissionPoint::MissionPoint(MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp)
+MissionPoint::MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp)
 {
 	this->DefaultDataInit();
+	this->MissionPayload=Payload;
 	this->StorgMeth = StMeth;
 	this->xCoordinate = destx;
 	this->yCoordinate = desty;

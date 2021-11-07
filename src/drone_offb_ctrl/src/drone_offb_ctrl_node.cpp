@@ -354,6 +354,15 @@ void odomCallback(const nav_msgs::Odometry::ConstPtr &odom)
     // );
 }
 
+enum MissionPayloadDefine
+{
+    MissionPayload_None = 0,        //无任务
+    MissionPayload_Laser = 1,       //打点
+    MissionPayload_DetectLaser = 2, //判断后打点
+    MissionPayload_FindBar = 3,
+    MissionPayload_ScanCode = 4
+};
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "drone_node");
@@ -391,91 +400,10 @@ int main(int argc, char **argv)
     CtrlPanel.WriteLED(1, 0);
     CtrlPanel.WriteLED(2, 0);
     CtrlPanel.WriteLED(3, 0);
-    // while (!T265_Present) //wait for remote command
-    // {
-    //     ROS_INFO("OFFB: Waiting for T265 Publish ...");
-    //     ros::spinOnce();
-    //     ros::Duration(0.01).sleep();
-
-    //     if (CtrlPanel.ReadKey(1))
-    //     {
-    //         CtrlPanel.WriteBeep(1);
-    //         ros::Duration(2.0).sleep();
-    //         CtrlPanel.WriteBeep(0);
-    //         ExitRosNode();
-    //         return 0;
-    //     }
-    //     //灯光闪烁
-    //     display_cnt++;
-    //     if (display_cnt >= 50)
-    //     {
-    //         display_cnt = 0;
-    //         CtrlPanel.WriteLED(3, bits = !bits);
-    //     }
-    // }
-
-    display_digit = 1;
-    display_cnt = 0;
-    image_converter usbcam(nh, "/usb_cam/image_raw", 10, sensor_msgs::image_encodings::BGR8);
-    ROS_INFO("Enter Test");
-    while (1)
+    while (!T265_Present) //wait for remote command
     {
-
+        ROS_INFO("OFFB: Waiting for T265 Publish ...");
         ros::spinOnce();
-
-        if (usbcam.new_img_come())
-        {
-            cv::Mat src = usbcam.get_cv_img();
-
-            //设定测量范围
-            int xx, yy, rr;
-            xx = 308; //320
-            yy = 235; //240
-            rr = 10;
-            cv::Rect center_rect(xx - rr, yy - rr, 2 * rr, 2 * rr);
-
-            cv::Mat center_img = src(center_rect);
-            cv::Mat center_img_proc;//, center_img_inrange;
-            cv::Mat tmpmat;
-
-            cv::cvtColor(center_img, center_img_proc, cv::COLOR_BGR2HSV);
-            cv::inRange(center_img_proc, cv::Scalar(72, 0, 108), cv::Scalar(77, 255, 255), center_img_proc);
-            cv::Mat kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
-            cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_OPEN, kernel_size);
-            cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_CLOSE, kernel_size);
-            cv::cvtColor(center_img_proc, tmpmat, cv::COLOR_GRAY2BGR);
-            cv::imshow("tmpmat", tmpmat);
-
-            // cv::Mat tmp_m, tmp_sd;
-            double m = 0, sd = 0;
-            m = cv::mean(center_img_proc)[0];
-            // cout << "Mean: " << m << endl;
-            // meanStdDev(gray, tmp_m, tmp_sd);
-            // m = tmp_m.at<double>(0, 0);
-            // sd = tmp_sd.at<double>(0, 0);
-            // cout << "Mean: " << m << " , StdDev: " << sd << endl;
-            // char tmpstr[64];
-            // sprintf(tmpstr, "Mean=%lf", m);
-            // cv::putText(src, "", cv::Point(5, 5), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 0), 3);
-            ROS_INFO("OFFB: CV: Mean=%lf", m);
-            cv::line(src, cv::Point(xx, 0), cv::Point(xx, 480), cv::Scalar(0, 0, 0));
-            cv::line(src, cv::Point(0, yy), cv::Point(640, yy), cv::Scalar(0, 0, 0));
-            // cv::circle(src, cv::Point(xx, yy), rr, cv::Scalar(0, 0, 0));
-            cv::rectangle(src, center_rect, cv::Scalar(0, 0, 0));
-            cv::imshow("usb_cam", src);
-            // cv::imshow("center_img_inrange", center_img_inrange);
-
-            cv::Mat src1, src2, src3;
-            cv::cvtColor(src, src1, cv::COLOR_BGR2HSV);
-            cv::inRange(src1, cv::Scalar(72, 0, 108), cv::Scalar(77, 255, 255), src2);
-            kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3,3));
-            cv::morphologyEx(src2, src2, cv::MORPH_OPEN, kernel_size);
-            cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_CLOSE, kernel_size);
-            cv::cvtColor(src2, src3, cv::COLOR_GRAY2BGR);
-            cv::imshow("usb_cam22", src3);
-        }
-        cv::waitKey(1);
-
         ros::Duration(0.01).sleep();
 
         if (CtrlPanel.ReadKey(1))
@@ -491,9 +419,143 @@ int main(int argc, char **argv)
         if (display_cnt >= 50)
         {
             display_cnt = 0;
-            CtrlPanel.WriteLaser(bits = !bits);
+            CtrlPanel.WriteLED(3, bits = !bits);
         }
     }
+
+    display_digit = 1;
+    display_cnt = 0;
+    image_converter usbcam(nh, "/usb_cam/image_raw", 10, sensor_msgs::image_encodings::BGR8);
+
+    // ROS_INFO("Enter Test");
+    // // cv::namedWindow("123", cv::WINDOW_NORMAL);
+    // // cv::resizeWindow("123", 320, 320);
+    // while (1)
+    // {
+    //     // ROS_INFO("OFFB: Detect Block.");
+    //     ros::spinOnce();
+    //     ros::Duration(0.01).sleep();
+    //     if (usbcam.new_img_come())
+    //     {
+    //         //获取最新图像
+    //         cv::Mat USBCam = usbcam.get_cv_img();
+    //         cv::imshow("1234", USBCam);
+    //         //定义一些参数
+    //         static const uint16_t CetnerX = 308, CenterY = 235, CenterR = 10;
+    //         static const cv::Scalar LowerBound(65, 53, 108), UpperBound(90, 255, 255);
+    //         static const cv::Rect CenterRect(CetnerX - CenterR, CenterY - CenterR, 2 * CenterR, 2 * CenterR);
+    //         //切割中央图像
+
+    //         //根据阈值二值化，滤波哦，求均值
+    //         cv::cvtColor(USBCam, USBCam, cv::COLOR_BGR2HSV);
+    //         cv::inRange(USBCam, LowerBound, UpperBound, USBCam);
+    //         cv::Mat kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+    //         // cv::morphologyEx(CenterImg, CenterImg, cv::MORPH_OPEN, kernel_size);
+    //         // cv::morphologyEx(CenterImg, CenterImg, cv::MORPH_CLOSE, kernel_size);
+    //         cv::Mat CenterImg = USBCam(CenterRect);
+    //         // cv::imshow("123", CenterImg);
+    //         cv::cvtColor(USBCam, USBCam, cv::COLOR_GRAY2BGR);
+    //         cv::imshow("12345", USBCam);
+    //         double m = cv::mean(CenterImg)[0];
+    //         //判断均值大小
+    //         ROS_INFO("OFFB: m = %lf.", m);
+    //         // if (m > 180.0)
+    //         // {
+    //         //     CtrlPanel.WriteLaser(1);
+    //         // }
+    //     }
+    //     else
+    //     {
+    //         ROS_WARN("OFFB: Capture Image Failed!");
+    //     }
+    //     cv::waitKey(1);
+    //     if (CtrlPanel.ReadKey(1))
+    //     {
+    //         CtrlPanel.WriteBeep(1);
+    //         ros::Duration(2.0).sleep();
+    //         CtrlPanel.WriteBeep(0);
+    //         ExitRosNode();
+    //         return 0;
+    //     }
+    // }
+
+    // // ROS_INFO("Enter Test");
+    // // while (1)
+    // // {
+
+    // //     ros::spinOnce();
+
+    // //     if (usbcam.new_img_come())
+    // //     {
+    // //         cv::Mat src = usbcam.get_cv_img();
+
+    // //         //设定测量范围
+    // //         int xx, yy, rr;
+    // //         xx = 308; //320
+    // //         yy = 235; //240
+    // //         rr = 10;
+    // //         cv::Rect center_rect(xx - rr, yy - rr, 2 * rr, 2 * rr);
+
+    // //         cv::Mat center_img = src(center_rect);
+    // //         cv::Mat center_img_proc; //, center_img_inrange;
+    // //         cv::Mat tmpmat;
+
+    // //         cv::cvtColor(center_img, center_img_proc, cv::COLOR_BGR2HSV);
+    // //         cv::inRange(center_img_proc, cv::Scalar(72, 0, 108), cv::Scalar(77, 255, 255), center_img_proc);
+    // //         cv::Mat kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+    // //         cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_OPEN, kernel_size);
+    // //         cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_CLOSE, kernel_size);
+    // //         cv::cvtColor(center_img_proc, tmpmat, cv::COLOR_GRAY2BGR);
+    // //         cv::imshow("tmpmat", tmpmat);
+
+    // //         // cv::Mat tmp_m, tmp_sd;
+    // //         double m = 0, sd = 0;
+    // //         m = cv::mean(center_img_proc)[0];
+    // //         // cout << "Mean: " << m << endl;
+    // //         // meanStdDev(gray, tmp_m, tmp_sd);
+    // //         // m = tmp_m.at<double>(0, 0);
+    // //         // sd = tmp_sd.at<double>(0, 0);
+    // //         // cout << "Mean: " << m << " , StdDev: " << sd << endl;
+    // //         // char tmpstr[64];
+    // //         // sprintf(tmpstr, "Mean=%lf", m);
+    // //         // cv::putText(src, "", cv::Point(5, 5), cv::FONT_HERSHEY_SIMPLEX, 2, cv::Scalar(0, 0, 0), 3);
+    // //         ROS_INFO("OFFB: CV: Mean=%lf", m);
+    // //         cv::line(src, cv::Point(xx, 0), cv::Point(xx, 480), cv::Scalar(0, 0, 0));
+    // //         cv::line(src, cv::Point(0, yy), cv::Point(640, yy), cv::Scalar(0, 0, 0));
+    // //         // cv::circle(src, cv::Point(xx, yy), rr, cv::Scalar(0, 0, 0));
+    // //         cv::rectangle(src, center_rect, cv::Scalar(0, 0, 0));
+    // //         cv::imshow("usb_cam", src);
+    // //         // cv::imshow("center_img_inrange", center_img_inrange);
+
+    // //         cv::Mat src1, src2, src3;
+    // //         cv::cvtColor(src, src1, cv::COLOR_BGR2HSV);
+    // //         cv::inRange(src1, cv::Scalar(72, 0, 108), cv::Scalar(77, 255, 255), src2);
+    // //         kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+    // //         cv::morphologyEx(src2, src2, cv::MORPH_OPEN, kernel_size);
+    // //         cv::morphologyEx(center_img_proc, center_img_proc, cv::MORPH_CLOSE, kernel_size);
+    // //         cv::cvtColor(src2, src3, cv::COLOR_GRAY2BGR);
+    // //         cv::imshow("usb_cam22", src3);
+    // //     }
+    // //     cv::waitKey(1);
+
+    // //     ros::Duration(0.01).sleep();
+
+    // //     if (CtrlPanel.ReadKey(1))
+    // //     {
+    // //         CtrlPanel.WriteBeep(1);
+    // //         ros::Duration(2.0).sleep();
+    // //         CtrlPanel.WriteBeep(0);
+    // //         ExitRosNode();
+    // //         return 0;
+    // //     }
+    // //     //灯光闪烁
+    // //     display_cnt++;
+    // //     if (display_cnt >= 50)
+    // //     {
+    // //         display_cnt = 0;
+    // //         CtrlPanel.WriteLaser(bits = !bits);
+    // //     }
+    // // }
 
     // 等待飞控将 custom mode 设置为 OFFBOARD
     display_digit = 1;
@@ -587,48 +649,50 @@ int main(int argc, char **argv)
     // const double dyStorage[TOTAL_STEP] = {0, 1.5, 1.5, 0};
     vector<MissionPoint> MPStorage;
     //到A
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 1.85, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1.85, -0.5));
     //向前1
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
     //向右6
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, -0.5));
     //向后5
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0)); //10
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+    // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_RELATIVE, -0.5, 0)); //10
+    // MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0)); //ALT
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
     //向左1
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
     //向前4
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0)); //15
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+    // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_RELATIVE, 0.5, 0)); //15
+    // MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0)); //ALT
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
     //向左1
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
     //向后4
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
     //向左1
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
     //向前4
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
     //向左2
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
-    MPStorage.push_back(MissionPoint(MPStorageMethod_RELATIVE, 0, 0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
+    MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
     //回0
-    MPStorage.push_back(MissionPoint(MPStorageMethod_ABSOLUTE, 0, 0)); //30
+    MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
 
     // for (std::vector<Vocabulary>::size_type it = 0; it < list.size(); ++it)
     // {
@@ -744,8 +808,47 @@ int main(int argc, char **argv)
 
         ROS_INFO("OFFB: Breaking...(%lf sec)", MPStorage[MissionStep].BreakIntervalSleepTime * MPStorage[MissionStep].BreakStep);
         CtrlPanel.WriteBeep(1);
-        if (MissionStep != 10 && MissionStep != 15 && MissionStep != 30)
+        
+        if (MPStorage[MissionStep].MissionPayload == MissionPayload_Laser)
+        {
             CtrlPanel.WriteLaser(1);
+        }
+        else if (MPStorage[MissionStep].MissionPayload == MissionPayload_DetectLaser)
+        {
+            ROS_INFO("OFFB: Detect Block.");
+            ros::spinOnce();
+            if (usbcam.new_img_come())
+            {
+                //获取最新图像
+                cv::Mat USBCam = usbcam.get_cv_img();
+                //定义一些参数
+                static const uint16_t CetnerX = 308, CenterY = 235, CenterR = 10;
+                static const cv::Scalar LowerBound(65, 53, 108), UpperBound(90, 255, 255);
+                static const cv::Rect CenterRect(CetnerX - CenterR, CenterY - CenterR, 2 * CenterR, 2 * CenterR);
+                //切割中央图像
+                cv::Mat CenterImg = USBCam(CenterRect);
+                //根据阈值二值化，滤波哦，求均值
+                cv::cvtColor(CenterImg, CenterImg, cv::COLOR_BGR2HSV);
+                cv::inRange(CenterImg, LowerBound, UpperBound, CenterImg);
+                // cv::Mat kernel_size = cv::getStructuringElement(cv::MORPH_RECT, cv::Size(3, 3));
+                // cv::morphologyEx(CenterImg, CenterImg, cv::MORPH_OPEN, kernel_size);
+                // cv::morphologyEx(CenterImg, CenterImg, cv::MORPH_CLOSE, kernel_size);
+                double m = cv::mean(CenterImg)[0];
+                //判断均值大小
+                ROS_INFO("OFFB: m = %lf.", m);
+                if (m > 180.0)
+                {
+                    CtrlPanel.WriteLaser(1);
+                }
+            }
+            else
+            {
+                ROS_WARN("OFFB: Capture Image Failed!");
+            }
+        }
+
+        // if (MissionStep != 10 && MissionStep != 15 && MissionStep != 30)
+
         for (int BreakCtrlStep = 0; BreakCtrlStep < MPStorage[MissionStep].BreakStep; BreakCtrlStep++)
         {
             ros::spinOnce();
@@ -773,6 +876,31 @@ int main(int argc, char **argv)
     {
         ROS_INFO("OFFB: Land Sucessful.");
     }
+
+    ROS_INFO("OFFB: Waiting for landing...");
+    for (int i = 0; i < 1000; i++)
+    {
+        ros::spinOnce();
+        ros::Duration(0.01).sleep();
+    }
+
+    int8_t disarm_time;
+    for (disarm_time = 1; arm_drone(nh) < 0 && disarm_time <= 3; disarm_time++)
+    {
+        ROS_WARN("OFFB: Try again.(%d)", disarm_time);
+    };
+
+    if (disarm_time > 3)
+    {
+        ROS_ERROR("OFFB: Failed disarming! Please Control Manually!!");
+        ExitRosNode();
+        return -1;
+    }
+    else
+    {
+        ROS_INFO("OFFB: Disarm Sucessful.");
+    }
+
     while (ros::ok())
     {
         ros::spinOnce();
