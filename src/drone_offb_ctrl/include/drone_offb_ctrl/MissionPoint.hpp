@@ -50,8 +50,9 @@ public:
 	////////////////////////////////////////////////////////
 
 	MissionPoint();
-	MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty);
-	MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp);
+	MissionPoint(uint8_t Payload, MPStorageMethod StMeth, double destx, double desty);
+	MissionPoint(uint8_t Payload, MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp);
+	MissionPoint(uint8_t Payload, MPStorageMethod StMeth, double destx, double desty, double calibx, double caliby,double facp);
 	bool inRange(double dx, double dy);
 	// bool inRange(double curr_x, double curr_y, double dest_x, double dest_y);
 };
@@ -78,19 +79,31 @@ MissionPoint::MissionPoint()
 	this->DefaultDataInit();
 }
 
-MissionPoint::MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty)
+MissionPoint::MissionPoint(uint8_t Payload, MPStorageMethod StMeth, double destx, double desty)
 {
 	this->DefaultDataInit();
-	this->MissionPayload=Payload;
+	this->MissionPayload = Payload;
 	this->StorgMeth = StMeth;
 	this->xCoordinate = destx;
 	this->yCoordinate = desty;
 }
 
-MissionPoint::MissionPoint(uint8_t Payload,MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp)
+MissionPoint::MissionPoint(uint8_t Payload, MPStorageMethod StMeth, double destx, double desty, double calibx, double caliby,double facp)
 {
 	this->DefaultDataInit();
-	this->MissionPayload=Payload;
+	this->MissionPayload = Payload;
+	this->StorgMeth = StMeth;
+	this->xCoordinate = destx;
+	this->yCoordinate = desty;
+	this->Caliblimtx = calibx;
+	this->Caliblimty = caliby;
+	this->P_FACTOR = facp;
+}
+
+MissionPoint::MissionPoint(uint8_t Payload, MPStorageMethod StMeth, double destx, double desty, uint16_t Breakstp)
+{
+	this->DefaultDataInit();
+	this->MissionPayload = Payload;
 	this->StorgMeth = StMeth;
 	this->xCoordinate = destx;
 	this->yCoordinate = desty;

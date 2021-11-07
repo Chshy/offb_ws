@@ -654,9 +654,9 @@ int main(int argc, char **argv)
         return -1;
     }
 
-    //等10秒 等待上升到指定高度
+    //等8.5秒 等待上升到指定高度
     ROS_INFO("OFFB: Waiting for climbing...");
-    for (int i = 0; i < 1000; i++)
+    for (int i = 0; i < 850; i++)
     {
         ros::spinOnce();
         ros::Duration(0.01).sleep();
@@ -686,13 +686,13 @@ int main(int argc, char **argv)
         //向后5
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
         //向左1
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
         //向前4
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
         //向左1
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
@@ -712,7 +712,9 @@ int main(int argc, char **argv)
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
         //回0
-        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+        // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, -0.025, 0.1, 0.1, 1.1));     //30
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, -0.025, 0.025, 0.025, 2.0)); //30
     }
     else if (SelectedMissionInd == 2)
     {
@@ -730,13 +732,13 @@ int main(int argc, char **argv)
         //向后5
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
-        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -1, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, -0.5, 0));
         //向左1
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
         //向前4
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
-        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 1, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0.5, 0));
         //向左1
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
@@ -756,7 +758,9 @@ int main(int argc, char **argv)
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
         MPStorage.push_back(MissionPoint(MissionPayload_DetectLaser, MPStorageMethod_RELATIVE, 0, 0.5));
         //回0
-        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+        // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, -0.025, 0.1, 0.1, 1.1));     //30
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, -0.025, 0.025, 0.025, 2.0)); //30
     }
     else if (SelectedMissionInd == 3)
     {
@@ -774,13 +778,13 @@ int main(int argc, char **argv)
         //向后5
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
-        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -1, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, -0.5, 0));
         //向左1
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
         //向前4
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
-        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1, 0)); 
+        MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 1, 0));
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0.5, 0));
         //向左1
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
@@ -800,7 +804,9 @@ int main(int argc, char **argv)
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
         MPStorage.push_back(MissionPoint(MissionPayload_Laser, MPStorageMethod_RELATIVE, 0, 0.5));
         //回0
-        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+        // MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, 0)); //30
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, -0.025, 0.1, 0.1, 1.1));     //30
+        MPStorage.push_back(MissionPoint(MissionPayload_None, MPStorageMethod_ABSOLUTE, 0, -0.025, 0.025, 0.025, 2.0)); //30
     }
 
     // for (std::vector<Vocabulary>::size_type it = 0; it < list.size(); ++it)
